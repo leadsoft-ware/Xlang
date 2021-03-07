@@ -743,12 +743,6 @@ ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in g
             asb.genCommand(lex.getNextToken().str);
             for(auto tok = lex.getNextToken();tok.type != TOK_END;tok = lex.getNextToken()){
                 if(tok.type == TOK_COMMA) continue;
-                if(tok.type == TOK_CBRACKETL){
-                    std::string tmp = tok.str;
-                    while((tok = lex.getNextToken()).type != TOK_CBRACKETR && tok.type != TOK_END) tmp += tok.str;
-                    asb.genArg(tmp += tok.str);
-                    continue;
-                }
                 asb.genArg(tok.str);
             }
             return asb.push();

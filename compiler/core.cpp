@@ -28,7 +28,7 @@ enum TokenValue {
     TOK_COLON,
     TOK_SEMICOLON,
     TOK_ARGSTATEMENT,
-    TOK_CBRACKETL,TOK_CBRACKETR, // []
+    TOK_ARRAYSS, // []
     TOK_BBRACKET,TOK_MBRACKET,TOK_BLOCK,TOK_CHARTER,TOK_ADDRBLOCK,
 };
 std::string TOKEN_VALUE_DESCRIPTION[] =
@@ -50,10 +50,10 @@ std::string TOKEN_VALUE_DESCRIPTION[] =
     "TOK_COLON",
     "TOK_SEMICOLON",
     "TOK_ARGSTATEMENT",
-    "TOK_CBRACKETL","TOK_CBRACKETR",
+    "TOK_ARRAYSS",
     "TOK_BBRACKET",
     "TOK_MBRACKET",
-    "TOK_BLOCK",
+    "TOK_ARRAYSS",
     "TOK_CHARTER","TOK_ADDRBLOCK"
 };
 //标签和标签的值
@@ -204,6 +204,21 @@ class Lexer{
             Next();
             return Token(TOK_ARGSTATEMENT,Text.substr(start,length));
         }
+        if(*current == '['){
+            Next();
+            int start = position;
+            int count = 0;
+            while(true){
+                if(*current == '['){ count++; }
+                if(*current == ']'){ count--; if(count == -1){break;} }
+                if(*current == '\0')  throw ParserError("TokenError: Cannot find ')' in this text");
+                if(*current == '\\'){Next();Next();}
+                Next();
+            }
+            int length = position - start;
+            Next();
+            return Token(TOK_ARRAYSS,Text.substr(start,length));
+        }
         if(*current == '^'){
             Next();
             if(isalpha(*current) || *current == '_'){
@@ -223,7 +238,6 @@ class Lexer{
         if(*current == '!'){ Next();if(*current == '=') {Next();return Token(TOK_NOTEQUAL,"!=");}else{throw ParserError("Undefined Token at" + std::to_string(position));} }
         if(*current == '<'){ Next();if(*current == '=') {Next();return Token(TOK_MINEQUAL,"<=");}else{return Token(TOK_MIN,"<");} }
         if(*current == '>'){ Next();if(*current == '=') {Next();return Token(TOK_MAXEQUAL,">=");}else{return Token(TOK_MAX,">");} }
-        if(*current == '['){Next();return Token(TOK_CBRACKETL,"[");}if(*current == ']'){Next();return Token(TOK_CBRACKETR,"]");}
         if(isdigit(*current)){
             TokenValue ret = TOK_INTEGER;
             int begin = position;
@@ -251,6 +265,8 @@ enum AST_nodeType{
     ExpressionStatement,
     BlockStatement,
     FunctionCallStatement,
+    ArraySubscript,
+    ArrayStatement,
     NormalStatement,
     Args,
     Id,
@@ -261,6 +277,8 @@ std::string AST_nodeType[] = {
     "ExpressionStatement",
     "BlockStatement",
     "FunctionCallStatement",
+    "ArraySubscript",
+    "ArrayStatement",
     "NormalStatement",
     "Args",
     "Id",
@@ -328,6 +346,7 @@ class ASTree{
             nodeT = ExpressionStatement;
             node.push_back( ASTree(LeftTokenList) );
             node.push_back( ASTree(RightTokenList) );
+            if((node[1].nodeT == ArraySubscript || node[1].nodeT == ArrayStatement) && this_node.type == TOK_DOT) this->nodeT = ArrayStatement;
             return;
         }
         if(current_tok.type == TOK_BLOCK){
@@ -356,7 +375,7 @@ class ASTree{
             node.push_back( ASTree(temp_lexer) );
             return;
         }
-        if(current_tok.type == TOK_ARGSTATEMENT || current_tok.type == TOK_PTRB || current_tok.type == TOK_ADDRBLOCK){
+        if(current_tok.type == TOK_ARGSTATEMENT || current_tok.type == TOK_PTRB || current_tok.type == TOK_ADDRBLOCK || current_tok.type == TOK_ARRAYSS){
             int count1=0,count2=0,count3=0,instr = 0; // (),[],{} don't find ','
             std::string temp_str = current_tok.str,current_str = "";
             for (size_t i = 0; i < temp_str.length(); i++){
@@ -376,8 +395,10 @@ class ASTree{
                 current_str += temp_str[i];
             }
             nodeT=Args;
-            this_node = Token(TOK_MBRACKET,"()");
-            if(current_tok.type == TOK_PTRB) this_node = current_tok;
+
+            if(current_tok.type == TOK_ARGSTATEMENT) this_node = Token(TOK_MBRACKET,"()");
+            else if(current_tok.type == TOK_ARRAYSS){this_node = Token(TOK_ARRAYSS,"[]");nodeT = ArraySubscript;}
+            else if(current_tok.type == TOK_PTRB) this_node = current_tok;
             else if(current_tok.type == TOK_ADDRBLOCK) this_node = current_tok;
             if(current_str != ""){
                 Lexer temp_lexer(current_str);
@@ -413,6 +434,13 @@ class ASTree{
                     node.push_back( ASTree(templex) );
                     sb = lexer.position;
                 }
+                if(tok.type == TOK_ARRAYSS){
+                    std::string s = lexer.Text.substr(sb,lastTokPosition - sb);
+                    if(s != ""){Lexer templex( s );node.push_back( ASTree(templex) );}
+                    Lexer templex( "["+tok.str+"]" );
+                    node.push_back( ASTree(templex) );
+                    sb = lexer.position;
+                }
                 if(tok.type == TOK_BLOCK){
                     /*std::cout << "皇帝的新tok.str >>>" << tok.str << (tok.str == "") <<  std::endl;
                     if(tok.str == ""){
@@ -428,6 +456,7 @@ class ASTree{
                 lastTokPosition = lexer.position;    
             }
             if(node.size() == 1 && node.empty() == false && node[0].nodeT == Args)  this->nodeT = FunctionCallStatement;
+            if(node.size() == 1 && node.empty() == false && node[0].nodeT == ArraySubscript)  this->nodeT = ArrayStatement;
             if(lexer.Text.substr(sb) != ""){
                 Lexer last( lexer.Text.substr(sb) );
                 node.push_back( ASTree(last) );
