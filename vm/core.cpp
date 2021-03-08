@@ -400,8 +400,8 @@ class VMRuntime{
         mainTSS.basememory.intc = 0;
         mainTSS.custom_code_labels.intc = LONG_MAX;
         tss_alloc = malloc_place + mainTSS.basememory.intc;
-        mainTSS.vheap_start.intc = (long)((long)heap.base_memory - (long)tss_alloc);
-        mainTSS.pc.intc = (long)((long)pc.offset - (long)tss_alloc);
+        mainTSS.vheap_start.intc = pointerSubtract(heap.base_memory,tss_alloc);
+        mainTSS.pc.intc = pointerSubtract(pc.offset,tss_alloc);
         for(int i = 0;i < 32;i++) mainTSS.regs[i] = regs[i];
         mainTSS._AllocSize.intc = _Alloc_Size;
         thisTSS = &mainTSS;
@@ -420,9 +420,9 @@ class VMRuntime{
     void UnLoadTSS(){
         thisTSS->fp.intc = stack_a.fp;
         thisTSS->sp.intc = stack_a.sp;
-        thisTSS->basememory.intc = (long)((long)stack_a.base_memory - (long)tss_alloc);
+        thisTSS->basememory.intc = pointerSubtract(stack_a.base_memory,tss_alloc);
         thisTSS->vheap_start.intc = heap.start;
-        if(thisTSS->custom_code_labels.intc != LONG_MAX) thisTSS->custom_code_labels.intc = (long)thisTSS->custom_code_labels.intc - (long)malloc_place;
+        //if(thisTSS->custom_code_labels.intc != LONG_MAX) thisTSS->custom_code_labels.intc = pointerSubtract(thisTSS->custom_code_labels,tss_alloc);
         for(int i = 0;i < 32;i++) thisTSS->regs[i] = regs[i];
     }
     void disasm(std::ostream &out = std::cout){
@@ -615,7 +615,7 @@ class VMRuntime{
             }else if(pc.offset->c.intc == realmap["labelg"]){
                 Content* dest = (Content*)GetMemberAddress(*(pc.offset+2));
                 Content num = ((Content*)GetMemberAddress(*(pc.offset+2)) == nullptr) ? (pc.offset+2)->c : *(Content*)GetMemberAddress(*(pc.offset+2));
-                dest->intc = (long)(program + vme.label_array[num.intc].start) - (long)tss_alloc;
+                dest->intc = pointerSubtract(program + vme.label_array[num.intc].start,tss_alloc);
             }else if(pc.offset->c.intc == realmap["labels"]){
                 Content lblid;
                 if(GetMemberAddress(*(pc.offset + 1)) != nullptr) lblid = *(Content*)GetMemberAddress(*(pc.offset+1));

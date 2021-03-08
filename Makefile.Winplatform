@@ -1,0 +1,26 @@
+# Makefile for Xlang compiler and Xtime VM
+CXX := g++ 
+CXXFLAGS = -w -O2 -g
+
+compiler: 
+	$(CXX) xlang.cpp -o xlang $(CXXFLAGS)
+
+vm: 
+	$(CXX) vm/vm.cpp -o ./vm/vm $(CXXFLAGS)
+
+debug_release:
+	$(CXX)  ./xlang.cpp -o xlang	-g -w 
+	$(CXX) ./vm/vm.cpp -o ./vm/vm	-g -w 
+
+all: compiler vm
+
+lib: lib/vmlib@latest/native
+	cd lib/vmlib@latest/native && $(CXX) ./basicio.cpp -o basicio -shared
+	cd lib/vmlib@latest/native && $(CXX) ./vmlib.cpp -o vmlib -shared
+
+run: all
+	./xlang && ./vm/vm
+
+clean:
+	rm -rf test_lex.dSYM test_lex xlang.dSYM test.dSYM xlang test_lex
+	cd lib/vmlib@latest/native && make clean
