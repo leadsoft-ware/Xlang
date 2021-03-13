@@ -296,7 +296,6 @@ std::string emptyStr(int size){
     for(int i = 0;i < size;i++){s[i] = ' ';}
     return s;
 }
-
 class ASTree{
     public:
     int nodeT;
@@ -325,6 +324,10 @@ class ASTree{
         }
         std::cout << "\b" << emptyStr(swap-1) << "],\n" << emptyStr(swap-1) << "},\n";
     }
+    ASTree getLastNode(){
+        if(node.empty()) return *this;
+        if(node.size() >= 1 && node.empty() == false) return node[node.size()-1];
+    }
     ASTree(Lexer lexer){
         lexer.Reset(); // reset lexer to first token
         Token current_tok = lexer.getNextToken();
@@ -346,7 +349,26 @@ class ASTree{
             nodeT = ExpressionStatement;
             node.push_back( ASTree(LeftTokenList) );
             node.push_back( ASTree(RightTokenList) );
-            if((node[1].nodeT == ArraySubscript || node[1].nodeT == ArrayStatement) && this_node.type == TOK_DOT) this->nodeT = ArrayStatement;
+            if(node[1].nodeT == ArrayStatement && this_node.type == TOK_DOT){
+                if(node[1].node[0].nodeT == ArraySubscript) {
+                    std::cout << "\033[31mHH\033[0m\n" << std::endl;
+                    this->node.push_back(*this);
+                    this->node[node.size() - 1].nodeT = ExpressionStatement;
+                    this->node.push_back(node[1].node[0]);
+                    //node[1].node.erase(node[1].node.begin()); // FIXME:Maybe there is an bug in future
+                    this->node.erase(node.begin()); // 两次连续erase第一个元素，删除之前的两个元素
+                    this->node.erase(node.begin());
+                }else if(node[1].node[1].nodeT == ArraySubscript && node[0].nodeT == TOK_DOT){
+                    std::cout << "\033[31mHHII\033[0m\n" << std::endl;
+                    this->node.push_back(*this);
+                    this->node[node.size() - 1].nodeT = ExpressionStatement;
+                    this->node.push_back(node[1].node[1]);
+                    node[1].node.erase(node[1].node.begin()+1); // FIXME:Maybe there is an bug in future
+                    this->node.erase(node.begin()); // 两次连续erase第一个元素，删除之前的两个元素
+                    this->node.erase(node.begin());
+                }
+                this->nodeT = ArrayStatement;
+            }
             return;
         }
         if(current_tok.type == TOK_BLOCK){
