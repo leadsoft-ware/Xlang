@@ -355,7 +355,7 @@ class ASTree{
                     this->node.push_back(*this);
                     this->node[node.size() - 1].nodeT = ExpressionStatement;
                     this->node.push_back(node[1].node[0]);
-                    //node[1].node.erase(node[1].node.begin()); // FIXME:Maybe there is an bug in future
+                    node[node.size() - 2].node[1].node.erase(node[node.size() - 2].node[1].node.begin()); // FIXME:Maybe there is an bug in future
                     this->node.erase(node.begin()); // 两次连续erase第一个元素，删除之前的两个元素
                     this->node.erase(node.begin());
                 }else if(node[1].node[1].nodeT == ArraySubscript && node[0].nodeT == TOK_DOT){

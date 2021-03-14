@@ -1,5 +1,11 @@
 ### Language [README.md](README.md) | [README_zh-cn.md](README_zh-cn.md)
 ### Update logs [updates.log](updates.log)
+# Tips
+**We're no longer support windows platform in future.**<br>
+**If you want to run it on windows, you must replace all the `long int` and `long` to `long long`,this is a bug of mingw.**<br/>
+**我们不再支持Windows平台**<br/>
+**如果你想要继续在Windows平台上运行，你必须把所有的`long int`和`long`替换成`long long`，这是mingw的一个bug**
+
 # Get Started
 ## DOWNLOAD AND COMPILE IT
 - first,download this repository to your computer.and chdir to it.
