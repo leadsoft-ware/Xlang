@@ -343,7 +343,7 @@ std::string guessType(ASTree ast){
                                     type_pool[global_symbol_table[fullname]._Typename.substr(4)].findObject(ast.node[1]).name : \
                                     type_pool[symbol_table[fullname]._Typename.substr(4)].findObject(ast.node[1]).name;
                 return result;
-            }
+            } 
         }else if(ast.this_node.type == TOK_COLON){
             return ast.node[0].this_node.str; // 送 业 绩
         }else{
@@ -356,7 +356,9 @@ std::string guessType(ASTree ast){
 }
 
 addr_t getMemberSize(ASTree ast){
-    return type_pool[guessType(ast)].size;
+    std::string tn = guessType(ast); // get typename
+    if(tn.substr(0,6) != "array_") return type_pool[tn].size;
+    else return atol(tn.substr(6,tn.find('_',6) - 6).c_str()) * type_pool[tn.substr(tn.find('_',6)+1)].size; // array typename format: array_[size]_[typename]
 }
 
 void InitCompiler(){
@@ -556,7 +558,6 @@ ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in g
                 for(int j = 0;j < temp_ast.node.size();j++){
                     if(temp_ast.node[j].nodeT == Id){
                         t.InsertToObject(temp_ast.node[j].this_node.str,this_type);
-                        
                     }
                     else throw CompileError("Compiler doesn't support init value now"); // TODO: Add init value support
                 }

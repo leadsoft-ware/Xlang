@@ -460,7 +460,8 @@ class ASTree{
                     std::string s = lexer.Text.substr(sb,lastTokPosition - sb);
                     if(s != ""){Lexer templex( s );node.push_back( ASTree(templex) );}
                     Lexer templex( "["+tok.str+"]" );
-                    node.push_back( ASTree(templex) );
+                    if(!node.empty())node[node.size() - 1].node.push_back( ASTree(templex) );
+                    else node.push_back( ASTree(templex) );
                     sb = lexer.position;
                 }
                 if(tok.type == TOK_BLOCK){
