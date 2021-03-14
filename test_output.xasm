@@ -1,8 +1,0 @@
-testfunc:
-popframe;
-push 1;
-ret;
-_vmstart:
-save;
-call testfunc;
-pop reg0;

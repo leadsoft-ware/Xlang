@@ -295,6 +295,17 @@ namespace ConstPool_Apis
         cpool.size += size;
         return cpool.count-1;
     }
+    addr_t Alloc(ConstantPool& cpool,addr_t size){
+        if(cpool.count == 0){
+            cpool.items[cpool.count+1] = size;
+            cpool.size = size;
+            return cpool.count++;
+        }
+        cpool.count++;
+        cpool.items[cpool.count] = cpool.items[cpool.count-1] + size;
+        cpool.size += size;
+        return cpool.count-1;
+    }
 } // namespace ConstPool_Apis
 
 bool isNormalExpression(ASTree ast){
@@ -579,7 +590,7 @@ ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in g
             for(int i = 0;i < ast.node.size();i++){
                 if(ast.node[i].nodeT == Id){
                     if(mode){
-                        int cp_adr = ConstPool_Apis::Insert(cp,(char*)malloc(typen.size),typen.size); // 解释，这里是把全局变量放进常量池，初始化
+                        int cp_adr = ConstPool_Apis::Alloc(cp,typen.size); // 解释，这里是把全局变量放进常量池，初始化
                         global_symbol_table[ast.node[i].this_node.str].frame_position = cp.items[cp_adr]; // WARN: 挖坑
                         global_symbol_table[ast.node[i].this_node.str]._Typename = typen.name;
                         asb.genCommand("mov_m").genArg("[" + std::to_string(cp.items[cp_adr]) + "]").genArg(std::to_string(0)).genArg(std::to_string(typen.size)); // 防止内存泄漏，删除了这段代码，不对变量进行初始化
@@ -599,7 +610,7 @@ ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in g
                         global_symbol_table[ast.node[i].node[0].this_node.str].frame_position = cp.items[cp.count];
                         global_symbol_table[ast.node[i].node[0].this_node.str]._Typename = typen.name;
                         //std::cout << "BUGHERE:" << typen.name <<  std::endl;
-                        ConstPool_Apis::Insert(cp,(char*)malloc(typen.size),typen.size);
+                        ConstPool_Apis::Alloc(cp,typen.size);
                         asb.genCommand("mov_m").genArg("[" + std::to_string(cp.items[cp.count - 1]) + "]");
                         asb.genArg(realarg0);
                         asb.genArg(std::to_string(typen.size));
