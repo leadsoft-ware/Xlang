@@ -468,9 +468,30 @@ ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in g
     }
     if(ast.nodeT == Args && (ast.this_node.type == TOK_PTRB || ast.this_node.type == TOK_ADDRBLOCK)){
         ASMBlock asb;
-        asb += dumpToAsm(ast.node[0]);
+        asb += dumpToAsm(ast.node[0],mode);
         //return asb.genCommand("mov").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("[reg" + std::to_string(getLastUsingRegId()) + "]").push(); // 由于先算出_dest和_Src的地址，所以这种语法是完全允许的
         return asb;
+    }
+    if(ast.nodeT == ArrayStatement){
+        if(ast.this_node.type == TOK_ID){
+            ASMBlock asb;
+            ast.nodeT = Id;
+            asb += dumpToAsm(ast);
+            RegState[getLastUsingRegId()] = true;
+            ast.nodeT = ArrayStatement;
+            asb += dumpToAsm(ast.node[0].node[0],mode);
+            asb.genCommand("add").genArg(std::to_string(getLastUsingRegId()-1)).genArg(std::to_string(getLastUsingRegId())).push();
+            RegState[getLastUsingRegId()-1] = false;
+            return asb;
+        }else{
+            ASMBlock asb;
+            asb += dumpToAsm(ast.node[0],mode);
+            RegState[getLastUsingRegId()] = true;
+            asb += dumpToAsm(ast.node[1].node[0],mode);
+            asb.genCommand("add").genArg(std::to_string(getLastUsingRegId()-1)).genArg(std::to_string(getLastUsingRegId())).push();
+            RegState[getLastUsingRegId()-1] = false;
+            return asb;
+        }
     }
     if(ast.nodeT == ExpressionStatement){
         if(ast.this_node.type == TOK_PLUS || ast.this_node.type == TOK_MINUS || ast.this_node.type == TOK_MULT || ast.this_node.type == TOK_DIV || ast.this_node.type == TOK_2EQUAL || ast.this_node.type == TOK_NOTEQUAL || ast.this_node.type == TOK_MAXEQUAL || ast.this_node.type == TOK_MINEQUAL || ast.this_node.type == TOK_MAX || ast.this_node.type == TOK_MIN){

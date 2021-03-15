@@ -12,7 +12,3 @@ import(headers:"lib/vmlib@latest/vmapi.xlang");*/
 
 char s[32];
 
-[32m_vmstart:[0m
-mov_m [0],0,1;
-exit;
-
