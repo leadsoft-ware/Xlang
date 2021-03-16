@@ -401,6 +401,10 @@ VarType getMemberType(ASTree ast){
     return getMemberType(ast,type_pool[ast.node[0].this_node.str]);
 }
 
+long getOriginArrayTypeSize(std::string tn){
+    return type_pool[tn.substr(tn.find('_',6)+1)].size;
+}
+
 ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in global,it's global mode(1)*/){
     if(ast.nodeT == Unused) return ASMBlock();
     if(ast.nodeT == Id){
@@ -473,25 +477,14 @@ ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in g
         return asb;
     }
     if(ast.nodeT == ArrayStatement){
-        if(ast.this_node.type == TOK_ID){
-            ASMBlock asb;
-            ast.nodeT = Id;
-            asb += dumpToAsm(ast);
-            RegState[getLastUsingRegId()] = true;
-            ast.nodeT = ArrayStatement;
-            asb += dumpToAsm(ast.node[0].node[0],mode);
-            asb.genCommand("add").genArg(std::to_string(getLastUsingRegId()-1)).genArg(std::to_string(getLastUsingRegId())).push();
-            RegState[getLastUsingRegId()-1] = false;
-            return asb;
-        }else{
             ASMBlock asb;
             asb += dumpToAsm(ast.node[0],mode);
             RegState[getLastUsingRegId()] = true;
             asb += dumpToAsm(ast.node[1].node[0],mode);
-            asb.genCommand("add").genArg(std::to_string(getLastUsingRegId()-1)).genArg(std::to_string(getLastUsingRegId())).push();
+            asb.genCommand("mul").genArg("reg"+std::to_string(getLastUsingRegId())).genArg(std::to_string(getOriginArrayTypeSize(guessType(ast.node[0]))));
+            asb.genCommand("add").genArg("reg"+std::to_string(getLastUsingRegId()-1)).genArg(std::to_string(getLastUsingRegId())).push();
             RegState[getLastUsingRegId()-1] = false;
             return asb;
-        }
     }
     if(ast.nodeT == ExpressionStatement){
         if(ast.this_node.type == TOK_PLUS || ast.this_node.type == TOK_MINUS || ast.this_node.type == TOK_MULT || ast.this_node.type == TOK_DIV || ast.this_node.type == TOK_2EQUAL || ast.this_node.type == TOK_NOTEQUAL || ast.this_node.type == TOK_MAXEQUAL || ast.this_node.type == TOK_MINEQUAL || ast.this_node.type == TOK_MAX || ast.this_node.type == TOK_MIN){
@@ -590,6 +583,12 @@ ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in g
                 for(int j = 0;j < temp_ast.node.size();j++){
                     if(temp_ast.node[j].nodeT == Id){
                         t.InsertToObject(temp_ast.node[j].this_node.str,this_type);
+                    }else if(temp_ast.node[j].nodeT == ArrayStatement){
+                        TypeName arrayt;
+                        arrayt.size = this_type.size * atol(temp_ast.node[j].node[1].node[0].this_node.str.data());
+                        arrayt.name = "array_"+temp_ast.node[j].node[1].node[0].this_node.str+"_"+this_type.name;
+                        arrayt.type=__OBJECT;
+                        t.InsertToObject(temp_ast.node[j].this_node.str,arrayt);
                     }
                     else throw CompileError("Compiler doesn't support init value now"); // TODO: Add init value support
                 }
@@ -609,6 +608,21 @@ ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in g
             TypeName& typen = type_pool[ast.this_node.str];
             ASMBlock asb;
             for(int i = 0;i < ast.node.size();i++){
+                if(ast.node[i].nodeT == ArrayStatement){
+                    TypeName arrayt;
+                    arrayt.size = typen.size * atol(ast.node[i].node[1].node[0].this_node.str.data());
+                    arrayt.name = "array_"+ast.node[i].node[1].node[0].this_node.str+"_"+typen.name;
+                    arrayt.type=__OBJECT;
+                    if(mode){
+                        int cp_adr = ConstPool_Apis::Alloc(cp,arrayt.size); 
+                        global_symbol_table[ast.node[i].node[0].this_node.str].frame_position = cp.items[cp_adr]; // WARN: 挖坑
+                        global_symbol_table[ast.node[i].node[0].this_node.str]._Typename = arrayt.name;
+                        asb.genCommand("mov_m").genArg("[" + std::to_string(cp.items[cp_adr]) + "]").genArg(std::to_string(0)).genArg(std::to_string(arrayt.size)); // 防止内存泄漏，删除了这段代码，不对变量进行初始化
+                        continue;
+                    }
+                    symbol_table[ast.node[i].this_node.str] = Symbol(arrayt.name);
+                    asb.genCommand("sub").genArg("regsp").genArg(std::to_string(arrayt.size)); // stack由上往下
+                }
                 if(ast.node[i].nodeT == Id){
                     if(mode){
                         int cp_adr = ConstPool_Apis::Alloc(cp,typen.size); // 解释，这里是把全局变量放进常量池，初始化
