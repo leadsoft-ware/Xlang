@@ -10,9 +10,16 @@ Writed by xiaokang00010 at Febuary,12th,2021
 import(headers:"lib/vmlib@latest/io.xlang");
 import(headers:"lib/vmlib@latest/vmapi.xlang");*/
 
-char s[32];
+int s[32];
+s[0]=1145;
 
 [32m_vmstart:[0m
-mov_m [0],0,32;
+mov_m [0],0,256;
+mov reg0,0;
+mov reg1,0;
+mul reg1,8;
+add reg0,reg1;
+mov reg1,1145;
+mov_m [reg0],reg1,8;
 exit;
 

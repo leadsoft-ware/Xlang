@@ -482,7 +482,7 @@ ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in g
             RegState[getLastUsingRegId()] = true;
             asb += dumpToAsm(ast.node[1].node[0],mode);
             asb.genCommand("mul").genArg("reg"+std::to_string(getLastUsingRegId())).genArg(std::to_string(getOriginArrayTypeSize(guessType(ast.node[0]))));
-            asb.genCommand("add").genArg("reg"+std::to_string(getLastUsingRegId()-1)).genArg(std::to_string(getLastUsingRegId())).push();
+            asb.genCommand("add").genArg("reg"+std::to_string(getLastUsingRegId()-1)).genArg("reg"+std::to_string(getLastUsingRegId())).push();
             RegState[getLastUsingRegId()-1] = false;
             return asb;
     }
