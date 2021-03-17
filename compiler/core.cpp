@@ -456,9 +456,20 @@ class ASTree{
                     node.push_back( ASTree(templex) );
                     sb = lexer.position;
                 }
-                if(tok.type == TOK_ARRAYSS){
+                if(tok.type == TOK_ARRAYSS && node.empty()){
                     std::string s = lexer.Text.substr(sb,lastTokPosition - sb);
-                    if(s != ""){Lexer templex( s );node.push_back( ASTree(templex) );}
+                    if(s != ""){
+                        Lexer temp_lex(s),templex("["+tok.str+"]");
+                        ASTree subast;
+                        subast.node.push_back(ASTree(temp_lex));
+                        subast.node.push_back(ASTree(templex));
+                        nodeT = NormalStatement;
+                        subast.nodeT=ArrayStatement;
+                        subast.this_node=Lexer(s).getNextToken();
+                        node.push_back(subast);
+                        sb=lexer.position;
+                        continue;
+                    }
                     Lexer templex( "["+tok.str+"]" );
                     node.push_back(*this);
                     node.push_back( ASTree(templex) );
