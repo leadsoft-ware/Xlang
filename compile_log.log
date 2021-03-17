@@ -11,12 +11,16 @@ import(headers:"lib/vmlib@latest/io.xlang");
 import(headers:"lib/vmlib@latest/vmapi.xlang");*/
 
 int s[32];
-s[0]=1145;
+int f=1;
+s[f]=1145;
 
 [32m_vmstart:[0m
 mov_m [0],0,256;
+mov reg0,1;
+mov_m [256],reg0,8;
 mov reg0,0;
-mov reg1,0;
+mov reg1,256;
+mov reg1,[reg1];
 mul reg1,8;
 add reg0,reg1;
 mov reg1,1145;

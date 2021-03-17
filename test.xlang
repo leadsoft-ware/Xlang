@@ -8,4 +8,5 @@ import(headers:"lib/vmlib@latest/io.xlang");
 import(headers:"lib/vmlib@latest/vmapi.xlang");*/
 
 int s[32];
-s[0]=1145;
+int f=1;
+s[f]=1145;

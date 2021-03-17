@@ -405,6 +405,12 @@ long getOriginArrayTypeSize(std::string tn){
     return type_pool[tn.substr(tn.find('_',6)+1)].size;
 }
 
+bool IsTakeAddressStatement(ASTree ast){
+    if(ast.nodeT == ExpressionStatement && ast.this_node.type != TOK_DOT) return false;
+    else if(ast.nodeT == Id && (ast.this_node.type == TOK_CHARTER || ast.this_node.type == TOK_INTEGER || ast.this_node.type == TOK_DOUBLE)) return false;
+    else return true;
+}
+
 ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in global,it's global mode(1)*/){
     if(ast.nodeT == Unused) return ASMBlock();
     if(ast.nodeT == Id){
@@ -481,7 +487,8 @@ ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in g
             asb += dumpToAsm(ast.node[0],mode);
             RegState[getLastUsingRegId()] = true;
             asb += dumpToAsm(ast.node[1].node[0],mode);
-            asb.genCommand("mul").genArg("reg"+std::to_string(getLastUsingRegId())).genArg(std::to_string(getOriginArrayTypeSize(guessType(ast.node[0]))));
+            if(IsTakeAddressStatement(ast.node[1].node[0])) asb.genCommand("mov").genArg("reg"+std::to_string(getLastUsingRegId())).genArg("[reg"+std::to_string(getLastUsingRegId())+"]").push();
+            asb.genCommand("mul").genArg("reg"+std::to_string(getLastUsingRegId())).genArg(std::to_string(getOriginArrayTypeSize(guessType(ast.node[0])))).push();
             asb.genCommand("add").genArg("reg"+std::to_string(getLastUsingRegId()-1)).genArg("reg"+std::to_string(getLastUsingRegId())).push();
             RegState[getLastUsingRegId()-1] = false;
             return asb;
