@@ -314,6 +314,9 @@ bool isNormalExpression(ASTree ast){
 }
 
 std::string guessType(ASTree ast){
+    if(ast.nodeT == ArrayStatement){
+        return guessType(ast.node[0]).substr(guessType(ast.node[0]).find('_',6)+1); // array typename format: array_[size]_[typename]
+    }
     if(ast.nodeT == Id){
         if((ast.this_node.type == TOK_ID || ast.this_node.type == TOK_PTRID) && symbol_table.count(ast.this_node.str))  return symbol_table[ast.this_node.str]._Typename;
         else if((ast.this_node.type == TOK_ID || ast.this_node.type == TOK_PTRID) && global_symbol_table.count(ast.this_node.str)) return global_symbol_table[ast.this_node.str]._Typename;

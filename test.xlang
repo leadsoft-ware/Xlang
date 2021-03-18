@@ -10,3 +10,6 @@ import(headers:"lib/vmlib@latest/vmapi.xlang");*/
 int s[32];
 int f=1;
 s[f]=1145;
+f=2;
+s[f]=2333;
+s[f]=s[f]+1;
