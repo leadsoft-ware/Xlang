@@ -366,6 +366,17 @@ class ASTree{
                     node[1].node.erase(node[1].node.begin()+1); // FIXME:Maybe there is an bug in future
                     this->node.erase(node.begin()); // 两次连续erase第一个元素，删除之前的两个元素
                     this->node.erase(node.begin());
+                }else if(node[1].node[0].this_node.type == TOK_ID){
+                    node[0].node.push_back(node[0]);
+                    node[0].node.push_back(node[1].node[0]);
+                    node[1].node.erase(node[1].node.begin());
+                    node[1].node.push_back(node[1].node[0].node[0]);
+                    node[1].node.erase(node[1].node.begin());
+                    // 调整细节
+                    node[0].nodeT=ExpressionStatement;
+                    node[0].this_node = this_node;
+                    node[1].nodeT = node[1].node[0].nodeT;
+                    node[1].this_node = node[1].node[0].this_node;
                 }
                 this->nodeT = ArrayStatement;
             }

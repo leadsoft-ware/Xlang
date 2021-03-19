@@ -10,47 +10,22 @@ Writed by xiaokang00010 at Febuary,12th,2021
 import(headers:"lib/vmlib@latest/io.xlang");
 import(headers:"lib/vmlib@latest/vmapi.xlang");*/
 
-int s[32];
-int f=1;
-s[f]=1145;
-f=2;
-s[f]=2333;
-s[f]=s[f]+1;
+struct v{
+	char s[114];
+};
+v r;
+r.s[0]='a';
 
+beforce:   a
+processed: a
 [32m_vmstart:[0m
-mov_m [0],0,256;
-mov reg0,1;
-mov_m [256],reg0,8;
+mov_m [0],0,114;
 mov reg0,0;
-mov reg1,256;
-mov reg1,[reg1];
-mul reg1,8;
-add reg0,reg1;
-mov reg1,1145;
-mov_m [reg0],reg1,8;
-mov reg0,256;
-mov reg1,2;
-mov_m [reg0],reg1,8;
-mov reg0,0;
-mov reg1,256;
-mov reg1,[reg1];
-mul reg1,8;
-add reg0,reg1;
-mov reg1,2333;
-mov_m [reg0],reg1,8;
-mov reg0,0;
-mov reg1,256;
-mov reg1,[reg1];
-mul reg1,8;
-add reg0,reg1;
 mov reg1,0;
-mov reg2,256;
-mov reg2,[reg2];
-mul reg2,8;
-add reg1,reg2;
-mov reg2,1;
-mov reg1,[reg1];
-add reg1,reg2;
-mov_m [reg0],reg1,8;
+mul reg1,1;
+add reg0,reg1;
+mov reg1,97;
+push1b reg1,reg1;
+mov_m [reg0],reg1,1;
 exit;
 
