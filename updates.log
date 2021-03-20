@@ -1,1 +1,3 @@
-plz write something in here....
+2020 3.20 Saturday:
+    Added Array fast init
+    [type] arrname[ count ] = [1,2,...];

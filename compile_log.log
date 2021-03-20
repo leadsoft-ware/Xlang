@@ -10,22 +10,50 @@ Writed by xiaokang00010 at Febuary,12th,2021
 import(headers:"lib/vmlib@latest/io.xlang");
 import(headers:"lib/vmlib@latest/vmapi.xlang");*/
 
-struct v{
-	char s[114];
-};
-v r;
-r.s[0]='a';
+char s[128] = ['a','b','c'];
+
+//char s[128];
 
 beforce:   a
 processed: a
-[32m_vmstart:[0m
-mov_m [0],0,114;
+--->reg1
+--->97
+--->reg1
+--->reg1
+[reg0]
+--->[reg0]
+--->reg1
+Press ^C to debug...beforce:   b
+processed: b
+--->reg1
+--->98
+--->reg1
+--->reg1
+[reg0]
+--->[reg0]
+--->reg1
+Press ^C to debug...beforce:   c
+processed: c
+--->reg1
+--->99
+--->reg1
+--->reg1
+[reg0]
+--->[reg0]
+--->reg1
+Press ^C to debug...[32m_vmstart:[0m
 mov reg0,0;
-mov reg1,0;
-mul reg1,1;
-add reg0,reg1;
 mov reg1,97;
 push1b reg1,reg1;
 mov_m [reg0],reg1,1;
+mov reg0,1;
+mov reg1,98;
+push1b reg1,reg1;
+mov_m [reg0],reg1,1;
+mov reg0,2;
+mov reg1,99;
+push1b reg1,reg1;
+mov_m [reg0],reg1,1;
+;
 exit;
 

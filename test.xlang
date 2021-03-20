@@ -7,8 +7,6 @@ Writed by xiaokang00010 at Febuary,12th,2021
 import(headers:"lib/vmlib@latest/io.xlang");
 import(headers:"lib/vmlib@latest/vmapi.xlang");*/
 
-struct v{
-	char s[114];
-};
-v r;
-r.s[0]='a';
+char s[128] = ['a','b','c'];
+
+//char s[128];

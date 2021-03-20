@@ -65,8 +65,24 @@ class ASMBlock{
         return *this;
     }
     ASMBlock& genArg(std::string s){
+        std::cout << "--->" << s << std::endl;
         if(temp.Main == ""){throw ParserError("You must make a command beforce add arg.");}
         temp.args.push_back(s);
+        return *this;
+    }
+    ASMBlock& genRegArg(long  regid){
+        if(temp.Main == ""){throw ParserError("You must make a command beforce add arg.");}
+        temp.args.push_back("reg"+std::to_string(regid));
+        return *this;
+    }
+    ASMBlock& genNumArg(long num){
+        if(temp.Main == ""){throw ParserError("You must make a command beforce add arg.");}
+        temp.args.push_back(std::to_string(num));
+        return *this;
+    }
+    ASMBlock& genAddrArg(long addr){
+        if(temp.Main == ""){throw ParserError("You must make a command beforce add arg.");}
+        temp.args.push_back("["+std::to_string(addr)+"]");
         return *this;
     }
     ASMBlock& push(){
@@ -193,6 +209,11 @@ class Symbol{
         _Typename = typename_;
         if(type_pool.find(_Typename) == type_pool.end()) throw CompileError("Undefined Typename as " + _Typename);
         sp += type_pool[_Typename].size;
+    }
+    Symbol(TypeName typename_){
+        frame_position = sp;
+        _Typename = typename_.name;
+        sp += typename_.size;
     }
     Symbol(){}
 };
@@ -630,7 +651,7 @@ ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in g
                         asb.genCommand("mov_m").genArg("[" + std::to_string(cp.items[cp_adr]) + "]").genArg(std::to_string(0)).genArg(std::to_string(arrayt.size)); // 防止内存泄漏，删除了这段代码，不对变量进行初始化
                         continue;
                     }
-                    symbol_table[ast.node[i].this_node.str] = Symbol(arrayt.name);
+                    symbol_table[ast.node[i].this_node.str] = Symbol(arrayt);
                     asb.genCommand("sub").genArg("regsp").genArg(std::to_string(arrayt.size)); // stack由上往下
                 }
                 if(ast.node[i].nodeT == Id){
@@ -641,11 +662,56 @@ ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in g
                         asb.genCommand("mov_m").genArg("[" + std::to_string(cp.items[cp_adr]) + "]").genArg(std::to_string(0)).genArg(std::to_string(typen.size)); // 防止内存泄漏，删除了这段代码，不对变量进行初始化
                         continue;
                     }
-                    symbol_table[ast.node[i].this_node.str] = Symbol(typen.name);
+                    symbol_table[ast.node[i].this_node.str] = Symbol(typen);
                     asb.genCommand("sub").genArg("regsp").genArg(std::to_string(typen.size)); // stack由上往下
                 }
                 if(ast.node[i].nodeT == ExpressionStatement && ast.node[i].this_node.type == TOK_EQUAL){
                     // has init value
+                    if(ast.node[i].node[0].nodeT == ArrayStatement){
+                        if(ast.node[i].node[1].nodeT != ArraySubscript) throw CompileError("Syntax Error: Cannot init array without ArraySubscript");
+                        TypeName arrayt;
+                        arrayt.size = typen.size * atol(ast.node[i].node[0].node[1].node[0].this_node.str.data());
+                        arrayt.name = "array_"+ast.node[i].node[0].node[1].node[0].this_node.str+"_"+typen.name;
+                        arrayt.type=__OBJECT;
+                        long count_offset=0;
+
+                        // init array structure 
+                        if(mode){
+                            int cp_adr = ConstPool_Apis::Alloc(cp,arrayt.size); 
+                            global_symbol_table[ast.node[i].node[0].this_node.str].frame_position = cp.items[cp_adr]; // WARN: 挖坑
+                            global_symbol_table[ast.node[i].node[0].this_node.str]._Typename = arrayt.name;
+                        }else{
+                            symbol_table[ast.node[i].this_node.str] = Symbol(arrayt);
+                            sp -= arrayt.size;
+                        }
+
+                        for(long f = 0;f < ast.node[i].node[1].node.size();f++){
+                            ASTree& thisast = ast.node[i].node[1].node[f];
+                            if(mode) asb.genCommand("mov").genRegArg(getLastUsingRegId()).genNumArg(global_symbol_table[ast.node[i].node[0].this_node.str].frame_position + count_offset).push();
+                            else{
+                                asb.genCommand("mov").genRegArg(getLastUsingRegId()).genArg("regsb").push();
+                                asb.genCommand("sub").genRegArg(getLastUsingRegId()).genArg("regfp").push();
+                                asb.genCommand("sub").genRegArg(getLastUsingRegId()).genArg("regsp").push();
+                                asb.genCommand("sub").genRegArg(getLastUsingRegId()).genAddrArg(symbol_table[ast.node[i].this_node.str].frame_position + count_offset).push();
+                            }
+                            RegState[getLastUsingRegId()] = true;
+                            asb += dumpToAsm(thisast);
+                            std::cout << "[reg"+std::to_string(getLastUsingRegId()-1)+"]" << std::endl;
+                            if(IsTakeAddressStatement(thisast))                                                           asb.genCommand("mov_m").genArg("[reg"+std::to_string(getLastUsingRegId()-1)+"]").genArg("[reg"+std::to_string(getLastUsingRegId())+"]").genNumArg(typen.size).push();
+                            if(IsTakeAddressStatement(thisast) && (guessType(thisast) == "char" || typen.name == "char")){
+                                std::cout << "push one byte" << asb.lists[asb.lists.size() - 1].tostring() << std::endl;
+                                asb.genCommand("push1b").genArg("[reg"+std::to_string(getLastUsingRegId()-1)+"]").genArg("reg"+getLastUsingRegId()).push();
+                            }else{
+                                asb.genCommand("mov_m").genArg("[reg"+std::to_string(getLastUsingRegId()-1)+"]").genArg("reg"+std::to_string(getLastUsingRegId())).genNumArg(typen.size).push();
+                            }
+                            RegState[getLastUsingRegId()-1] = false;
+                            count_offset += typen.size;
+                            StartDebuger();
+                        }
+
+                        if(!mode) sp += arrayt.size;
+                        continue;
+                    }
                     asb += dumpToAsm(ast.node[i].node[1]);
                     if(mode){
                         std::string realarg0 = "reg" + std::to_string(getLastUsingRegId());
