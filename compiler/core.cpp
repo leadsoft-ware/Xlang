@@ -540,6 +540,7 @@ namespace ASTree_APIs{
                 if(ast.node[1].nodeT != FunctionCallStatement) str += "." + getFunctionPath(ast.node[1]);
                 else return str;
             }
+            return "";
         }
     };
 };

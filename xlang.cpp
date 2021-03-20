@@ -28,6 +28,6 @@ int main(){
     }
     Bytecode::Init(asms);
     Bytecode::exportBytecode();
-    VMExec_Serialization("test.xvm",Bytecode::packVMExec());
+    VMExec_Serialization((char*)std::string("test.xvm").c_str(),Bytecode::packVMExec());
     std::cout <<  std::endl;
 }

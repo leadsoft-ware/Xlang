@@ -286,6 +286,7 @@ std::string getFunctionRealName(ASTree a){
 ASTree getFunctionCallArgs(ASTree ast){
     if(ast.nodeT == FunctionCallStatement) return ast.node[0];
     else if(ast.nodeT == ExpressionStatement && ast.this_node.type == TOK_DOT) return getFunctionCallArgs(ast.node[1]);
+    return ASTree();
 }
 
 std::string funcnameInTab(std::string realname){
@@ -388,6 +389,7 @@ std::string guessType(ASTree ast){
     }else if(ast.this_node.type == TOK_PTRB){
         return guessType(ast.node[0].node[0]);
     }
+    return "unknown";
 }
 
 addr_t getMemberSize(ASTree ast){
@@ -878,13 +880,14 @@ ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in g
         for(int i = 0;i < ast.node.size();i++) ret += dumpToAsm(ast.node[i]);
         return ret;
     }
+    return ASMBlock();
 }
 
 std::vector<ASMBlock> CompileProcess(std::string code){
+    std::vector<ASMBlock> asblst;
     #ifndef __DONT_CATCH_ERROR
     try{
     #endif
-    std::vector<ASMBlock> asblst;
     ASMBlock asb;
     int intext=0,block=0,brack1=0,brack2=0,brack3=0,descriptor = 0,bdescriptor = 0;
     std::string tmp;
@@ -958,6 +961,7 @@ std::vector<ASMBlock> CompileProcess(std::string code){
         e.what();
     }
     #endif
+    return asblst;
 }
 
 namespace Bytecode{

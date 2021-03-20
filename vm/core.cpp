@@ -448,7 +448,7 @@ class VMRuntime{
         else if(a.opid == NormalRegister)  return (char*)&getRegRefernce(a.c.intc);
         else if(a.opid == Address) return tss_alloc + a.c.intc;
         else if(a.opid == Address_Register) return tss_alloc + getRegRefernce(a.c.intc).intc;
-        else return nullptr;
+        return nullptr;
     }
     void StartVMProc(){
         for(CodeLabel* i = vme.label_array;i < vme.label_array+vme.head.code_label_count;i++){
