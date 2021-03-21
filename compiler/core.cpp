@@ -241,7 +241,7 @@ class Lexer{
         if(isdigit(*current)){
             TokenValue ret = TOK_INTEGER;
             int begin = position;
-            while(isdigit(*current) || *current == '.'){if(*current == '.'){ret = TOK_DOUBLE;}Next();}
+            while(isdigit(*current) || *current == '.' || *current == 'x'){if(*current == '.'){ret = TOK_DOUBLE;}Next();}
             int length = position - begin;
             //Next();
             return Token(ret,Text.substr(begin,length));

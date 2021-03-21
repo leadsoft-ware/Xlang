@@ -10,30 +10,78 @@ Writed by xiaokang00010 at Febuary,12th,2021
 import(headers:"lib/vmlib@latest/io.xlang");
 import(headers:"lib/vmlib@latest/vmapi.xlang");*/
 
-int l[3] = [1,2,3];
+func int main(){
+	int f[] = [123,456,789,0x114514];
+	return f[3];
+};
+int f = main();
 
---->reg1
+--->_main_int
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->regsp
+--->reg0
 --->1
-[reg0]
+--->[0]
 --->[reg0]
-Press ^C to debug...--->reg1
---->2
+--->8
+--->reg1
+--->0x114514
 [reg0]
---->[reg0]
+--->reg1
 Press ^C to debug...--->reg1
+--->789
+[reg0]
+--->reg1
+Press ^C to debug...--->reg1
+--->456
+[reg0]
+--->reg1
+Press ^C to debug...--->reg1
+--->123
+[reg0]
+--->reg1
+Press ^C to debug...--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->31
+--->reg1
 --->3
-[reg0]
+--->reg1
+--->8
+--->reg0
+--->reg1
 --->[reg0]
-Press ^C to debug...[32m_vmstart:[0m
-mov reg0,0;
-mov reg1,1;
-mov [reg0],reg1;
-mov reg0,8;
-mov reg1,2;
-mov [reg0],reg1;
-mov reg0,16;
-mov reg1,3;
-mov [reg0],reg1;
-;
+--->8
+[32m_vmstart:[0m
+save;
+call _main_int;
+mov reg0,regsb;
+sub reg0,regfp;
+sub reg0,regsp;
+add reg0,1;
+mov_m [0],[reg0],8;
 exit;
+[32m_main_int:[0m
+mov reg1,0x114514;
+push reg1,8;
+mov reg1,789;
+push reg1,8;
+mov reg1,456;
+push reg1,8;
+mov reg1,123;
+push reg1,8;
+;
+mov reg0,regsb;
+sub reg0,regfp;
+sub reg0,31;
+mov reg1,3;
+mul reg1,8;
+add reg0,reg1;
+ret [reg0],8;
 

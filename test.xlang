@@ -7,4 +7,8 @@ Writed by xiaokang00010 at Febuary,12th,2021
 import(headers:"lib/vmlib@latest/io.xlang");
 import(headers:"lib/vmlib@latest/vmapi.xlang");*/
 
-int l[3] = [1,2,3];
+func int main(){
+	int f[] = [123,456,789];
+	return f[2];
+};
+int f = main();

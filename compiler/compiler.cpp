@@ -1,6 +1,6 @@
 #include "core.cpp"
 #include "../vm/core.cpp"
-#define __DONT_CATCH_ERROR 
+//#define __DONT_CATCH_ERROR 
 
 std::string& replace_all(std::string& str,const std::string& old_value,const std::string& new_value)     
 {     
@@ -672,6 +672,7 @@ ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in g
                     if(ast.node[i].node[0].nodeT == ArrayStatement){
                         if(ast.node[i].node[1].nodeT != ArraySubscript) throw CompileError("Syntax Error: Cannot init array without ArraySubscript");
                         TypeName arrayt;
+                        if(ast.node[i].node[0].node[1].node.empty()) ast.node[i].node[0].node[1].node.push_back(ASTree(Lexer(std::to_string(ast.node[i].node[1].node.size()))));
                         arrayt.size = typen.size * atol(ast.node[i].node[0].node[1].node[0].this_node.str.data());
                         arrayt.name = "array_"+ast.node[i].node[0].node[1].node[0].this_node.str+"_"+typen.name;
                         arrayt.type=__OBJECT;
