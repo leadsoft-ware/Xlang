@@ -530,17 +530,17 @@ ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in g
             if(ast.node[1].this_node.type == TOK_PTRID || ast.node[1].this_node.type == TOK_PTRB || (guessType(ast.node[1]) == "char" && ast.node[1].this_node.type != TOK_CHARTER)) ab.genCommand("push1b").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("[reg" + std::to_string(getLastUsingRegId()) + "]").push();
             if(ast.node[1].nodeT == FunctionCallStatement || ASTree_APIs::MemberExpression::hasFunctionCallStatement(ast.node[1])) sp -= getMemberSize(ast.node[1]);
             RegState[getLastUsingRegId()] = true;
-            if(isNormalExpression(ast.node[0]) || (getMemberType(ast.node[0]) == __BASIC_1BYTE)) /*由于这是常量或者已经删除其他元素的char，不需要再将值压入寄存器*/;
+            if(isNormalExpression(ast.node[0]) || (getMemberSize(ast.node[0]) == 1)) /*由于这是常量或者已经删除其他元素的char，不需要再将值压入寄存器*/;
             else if(ASTree_APIs::MemberExpression::hasFunctionCallStatement(ast.node[0])){
                 ab.genCommand("mov").genArg("reg" + std::to_string(getLastUsingRegId() - 2)).genArg("[reg" + std::to_string(getLastUsingRegId() - 2) + "]").push();
                 sp -= getMemberSize(ast.node[0]);
             }
-            else if(getMemberType(ast.node[0]) == __BASIC_8BYTE) ab.genCommand("mov").genArg("reg" + std::to_string(getLastUsingRegId() - 2)).genArg("[reg" + std::to_string(getLastUsingRegId() - 2) + "]").push();
+            else if(getMemberSize(ast.node[0]) == 8 && IsTakeAddressStatement(ast.node[0])) ab.genCommand("mov").genArg("reg" + std::to_string(getLastUsingRegId() - 2)).genArg("[reg" + std::to_string(getLastUsingRegId() - 2) + "]").push();
             else throw CompileError("TypeError: 加减乘除以及逻辑运算仅限于基础类型,除非你想让虚拟机崩掉.\nBasic operator and boolean expression only support basic types,if you want to let the vm crash then don't do it.");
             //if(ast.node[1].this_node.type == TOK_PTRID || ast.node[1].this_node.type == TOK_PTRB) ab.genArg("[reg" + std::to_string(getLastUsingRegId() - 2) + "]");
-            if(isNormalExpression(ast.node[1]) || getMemberType(ast.node[1]) == __BASIC_1BYTE) /*同上*/;
+            if(isNormalExpression(ast.node[1]) || (getMemberSize(ast.node[1]) == 1)) /*同上*/;
             else if(ASTree_APIs::MemberExpression::hasFunctionCallStatement(ast.node[1])) ab.genCommand("mov").genArg("reg" + std::to_string(getLastUsingRegId() - 1)).genArg("[reg" + std::to_string(getLastUsingRegId() - 1) + "]").push();
-            else if(getMemberType(ast.node[1]) == __BASIC_8BYTE) ab.genCommand("mov").genArg("reg" + std::to_string(getLastUsingRegId() - 1)).genArg("[reg" + std::to_string(getLastUsingRegId() - 1) + "]").push();
+            else if(getMemberSize(ast.node[0]) == 8 && IsTakeAddressStatement(ast.node[0])) ab.genCommand("mov").genArg("reg" + std::to_string(getLastUsingRegId() - 1)).genArg("[reg" + std::to_string(getLastUsingRegId() - 1) + "]").push();
             else throw CompileError("TypeError: 加减乘除以及逻辑运算仅限于基础类型,除非你想让虚拟机崩掉.\nBasic operator and boolean expression only support basic types,if you want to let the vm crash then don't do it.");
 
             if(ast.this_node.type == TOK_PLUS) ab.genCommand("add");
@@ -742,7 +742,7 @@ ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in g
             if(ast.node[0].nodeT != Args || ast.node[1].nodeT != BlockStatement)  throw ParserError("SyntaxError: Bad If Statement");
             ASMBlock tmpblock = dumpToAsm(ast.node[1],mode); // end_pos - now_pos = jmp command
             asb += dumpToAsm(ast.node[0].node[0],mode);
-            asb.genCommand("jt").genArg("2").genCommand("jf").genArg(std::to_string(tmpblock.lists.size()+1)).push();
+            asb.genCommand("jt").genArg("2").genCommand("jf").genArg(std::to_string(tmpblock.lists.size()+2)).push();
             asb += tmpblock;
             asb.genCommand("_$fakecommand_goto_statement_end").push();
             if(ast.node.size() > 2) {
