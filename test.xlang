@@ -7,12 +7,8 @@ Writed by xiaokang00010 at Febuary,12th,2021
 import(headers:"lib/vmlib@latest/io.xlang");
 import(headers:"lib/vmlib@latest/vmapi.xlang");*/
 
-func int main(){
-    int f[] = [123,456,456];
-    if(f[2] == 789){
-        return f[2];
-    }else{
-        return f[0];
-    };
+func int test(){
+    int f=5;
+    return f;
 };
-int f = main();
+int f = test();

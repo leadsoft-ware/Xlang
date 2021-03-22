@@ -10,17 +10,13 @@ Writed by xiaokang00010 at Febuary,12th,2021
 import(headers:"lib/vmlib@latest/io.xlang");
 import(headers:"lib/vmlib@latest/vmapi.xlang");*/
 
-func int main(){
-    int f[] = [123,456,456];
-    if(f[2] == 789){
-        return f[2];
-    }else{
-        return f[0];
-    };
+func int test(){
+    int f=5;
+    return f;
 };
-int f = main();
+int f = test();
 
---->_main_int
+--->_test_int
 --->reg0
 --->regsb
 --->reg0
@@ -32,107 +28,32 @@ int f = main();
 --->[0]
 --->[reg0]
 --->8
---->reg1
---->456
-[reg0]
---->reg1
-Press ^C to debug...--->reg1
---->456
-[reg0]
---->reg1
-Press ^C to debug...--->reg1
---->123
-[reg0]
---->reg1
-Press ^C to debug...--->reg0
---->regsb
 --->reg0
---->regfp
+--->5
 --->reg0
---->23
---->reg1
---->2
---->reg1
---->8
---->reg0
---->reg1
---->[reg0]
 --->8
 --->reg0
 --->regsb
 --->reg0
 --->regfp
 --->reg0
---->23
---->reg1
---->2
---->reg1
---->8
---->reg0
---->reg1
---->reg1
---->789
---->reg0
---->[reg0]
---->reg0
---->reg1
---->2
---->9
---->reg0
---->regsb
---->reg0
---->regfp
---->reg0
---->23
---->reg1
---->0
---->reg1
---->8
---->reg0
---->reg1
+--->7
 --->[reg0]
 --->8
 [32m_vmstart:[0m
 save;
-call _main_int;
+call _test_int;
 mov reg0,regsb;
 sub reg0,regfp;
 sub reg0,regsp;
 add reg0,1;
 mov_m [0],[reg0],8;
 exit;
-[32m_main_int:[0m
-mov reg1,456;
-push reg1,8;
-mov reg1,456;
-push reg1,8;
-mov reg1,123;
-push reg1,8;
-;
+[32m_test_int:[0m
+mov reg0,5;
+push reg0,8;
 mov reg0,regsb;
 sub reg0,regfp;
-sub reg0,23;
-mov reg1,2;
-mul reg1,8;
-add reg0,reg1;
-mov reg1,789;
-mov reg0,[reg0];
-equ reg0,reg1;
-jt 2;
-jf 9;
-mov reg0,regsb;
-sub reg0,regfp;
-sub reg0,23;
-mov reg1,2;
-mul reg1,8;
-add reg0,reg1;
-ret [reg0],8;
-jmp 8;
-mov reg0,regsb;
-sub reg0,regfp;
-sub reg0,23;
-mov reg1,0;
-mul reg1,8;
-add reg0,reg1;
+sub reg0,7;
 ret [reg0],8;
 

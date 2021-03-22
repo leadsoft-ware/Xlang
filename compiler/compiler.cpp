@@ -853,9 +853,14 @@ ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in g
         if(ast.this_node.str == "return"){
             ASMBlock asb;
             asb += dumpToAsm(ast.node[0]);
-            std::string realarg0 = "reg" + std::to_string(getLastUsingRegId());
-            if(ast.node[0].this_node.type == TOK_INTEGER || ast.node[0].this_node.type == TOK_ADDRBLOCK || ast.node[0].this_node.type == TOK_DOUBLE || ast.node[0].this_node.type == TOK_CHARTER || ast.node[0].this_node.type == TOK_STRING || (ast.node[0].nodeT == ExpressionStatement && ast.node[0].this_node.type != TOK_DOT)) /*do nothing*/;
-            else realarg0 = "[" + realarg0 + "]";
+            std::string realarg0 = "[reg" + std::to_string(getLastUsingRegId()) + "]";
+            if(ast.node[0].this_node.type == TOK_INTEGER || ast.node[0].this_node.type == TOK_ADDRBLOCK || ast.node[0].this_node.type == TOK_DOUBLE || ast.node[0].this_node.type == TOK_CHARTER || ast.node[0].this_node.type == TOK_STRING || (ast.node[0].nodeT == ExpressionStatement && ast.node[0].this_node.type != TOK_DOT)) {
+                asb.genCommand("push").genRegArg(getLastUsingRegId()).genNumArg(8).push();
+                asb.genCommand("mov").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("regsb").\
+                genCommand("sub").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("regfp").\
+                genCommand("sub").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("regsp").\
+                genCommand("add").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("1").push();
+            }
             return asb.genCommand("ret").genArg(realarg0).genArg(std::to_string(getMemberSize(ast.node[0])))/*.genCommand("push").genArg(realarg0).genArg(std::to_string(getMemberSize(ast.node[0])))*/.push();
         }
         if(ast.this_node.str == "asm"){
