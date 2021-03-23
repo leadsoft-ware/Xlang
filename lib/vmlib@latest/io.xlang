@@ -1,22 +1,13 @@
 /*
-- Xlang Basic IO File
+Xlang's Basic IO Operation Header
+Rewrited by xiaokang00010 at March/23/2021
 */
 
-func int readLine(ptr_char:dest){
-    for(ptr_char i=dest,^(i-1) != '\n',i=i+1){
-        i;
-        asm "mov reg0,[reg0]";
-        asm "in 0,[reg0]";
-    };
-    return 0;
-};
-
-func int printLine(ptr_char:dest){
-    for(ptr_char i=dest,^(i-1) != '\n',i=i+1){
-        if(^i == '\0'){break;};
-        i;
+func int printLine(ptr_char:s){
+    for(ptr_char f = s,^f != '\0',f=f+1){
+        f;
         asm "mov reg0,[reg0]";
         asm "out 0,[reg0]";
     };
-    return 0;
+    return 1;
 };

@@ -870,7 +870,8 @@ ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in g
             asb.genCommand(lex.getNextToken().str);
             for(auto tok = lex.getNextToken();tok.type != TOK_END;tok = lex.getNextToken()){
                 if(tok.type == TOK_COMMA) continue;
-                asb.genArg(tok.str);
+                if(tok.type == TOK_ARRAYSS) asb.genArg("["+tok.str+"]");
+                else asb.genArg(tok.str);
             }
             return asb.push();
         }

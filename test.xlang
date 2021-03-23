@@ -3,12 +3,7 @@ This is a test file for Xlang compiler
 Writed by xiaokang00010 at Febuary,12th,2021
 */
 // for testing
-/*import(headers:"lib/vmlib@latest/heap.xlang");
 import(headers:"lib/vmlib@latest/io.xlang");
-import(headers:"lib/vmlib@latest/vmapi.xlang");*/
 
-func int test(){
-    int f=5;
-    return f;
-};
-int f = test();
+ptr_char s="Hello,World!\n";
+printLine(s);

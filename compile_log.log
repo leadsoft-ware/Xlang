@@ -6,32 +6,11 @@ This is a test file for Xlang compiler
 Writed by xiaokang00010 at Febuary,12th,2021
 */
 // for testing
-/*import(headers:"lib/vmlib@latest/heap.xlang");
 import(headers:"lib/vmlib@latest/io.xlang");
-import(headers:"lib/vmlib@latest/vmapi.xlang");*/
 
-func int test(){
-    int f=5;
-    return f;
-};
-int f = test();
+ptr_char s="Hello,World!\n";
+printLine(s);
 
---->_test_int
---->reg0
---->regsb
---->reg0
---->regfp
---->reg0
---->regsp
---->reg0
---->1
---->[0]
---->[reg0]
---->8
---->reg0
---->5
---->reg0
---->8
 --->reg0
 --->regsb
 --->reg0
@@ -40,20 +19,206 @@ int f = test();
 --->7
 --->[reg0]
 --->8
+--->reg1
+--->regsb
+--->reg1
+--->regfp
+--->reg1
+--->15
+--->reg0
+--->[reg1]
+--->reg0
+--->[reg0]
+beforce:   \0
+processed: 
+--->reg1
+--->0
+--->reg1
+--->reg1
+--->reg0
+--->reg1
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->15
+--->reg0
+--->[reg0]
+--->0
+--->[reg0]
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->15
+--->reg1
+--->regsb
+--->reg1
+--->regfp
+--->reg1
+--->15
+--->reg2
+--->1
+--->reg1
+--->[reg1]
+--->reg1
+--->reg2
+--->[reg0]
+--->reg1
+--->8
+--->2
+--->17
+--->reg0
+--->1
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->regsp
+--->reg0
+--->1
+--->[reg0]
+--->8
+--->reg0
+--->0
+--->[13]
+--->reg0
+--->8
+--->reg0
+--->13
+--->[reg0]
+--->8
+--->_printLine_int
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->regsp
+--->reg0
+--->1
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->7
+--->[reg0]
+--->8
+--->reg1
+--->regsb
+--->reg1
+--->regfp
+--->reg1
+--->15
+--->reg0
+--->[reg1]
+--->reg0
+--->[reg0]
+beforce:   \0
+processed: 
+--->reg1
+--->0
+--->reg1
+--->reg1
+--->reg0
+--->reg1
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->15
+--->reg0
+--->[reg0]
+--->0
+--->[reg0]
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->15
+--->reg1
+--->regsb
+--->reg1
+--->regfp
+--->reg1
+--->15
+--->reg2
+--->1
+--->reg1
+--->[reg1]
+--->reg1
+--->reg2
+--->[reg0]
+--->reg1
+--->8
+--->2
+--->17
+--->reg0
+--->1
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->regsp
+--->reg0
+--->1
+--->[reg0]
+--->8
 [32m_vmstart:[0m
+mov reg0,0;
+mov_m [13],reg0,8;
 save;
-call _test_int;
+mov reg0,13;
+push [reg0],8;
+call _printLine_int;
 mov reg0,regsb;
 sub reg0,regfp;
 sub reg0,regsp;
 add reg0,1;
-mov_m [0],[reg0],8;
 exit;
-[32m_test_int:[0m
-mov reg0,5;
-push reg0,8;
+[32m_printLine_int:[0m
 mov reg0,regsb;
 sub reg0,regfp;
 sub reg0,7;
+push [reg0],8;
+mov reg1,regsb;
+sub reg1,regfp;
+sub reg1,15;
+mov reg0,[reg1];
+push1b reg0,[reg0];
+mov reg1,0;
+push1b reg1,reg1;
+neq reg0,reg1;
+jt 2;
+jf 17;
+mov reg0,regsb;
+sub reg0,regfp;
+sub reg0,15;
+mov reg0,[reg0];
+out 0,[reg0];
+mov reg0,regsb;
+sub reg0,regfp;
+sub reg0,15;
+mov reg1,regsb;
+sub reg1,regfp;
+sub reg1,15;
+mov reg2,1;
+mov reg1,[reg1];
+add reg1,reg2;
+mov_m [reg0],reg1,8;
+jmp -25;
+mov reg0,1;
+push reg0,8;
+mov reg0,regsb;
+sub reg0,regfp;
+sub reg0,regsp;
+add reg0,1;
 ret [reg0],8;
 
