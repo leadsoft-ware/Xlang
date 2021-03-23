@@ -7,3 +7,5 @@ import(headers:"lib/vmlib@latest/io.xlang");
 
 ptr_char s="Hello,World!\n";
 printLine(s);
+readLine(s);
+printLine(s);

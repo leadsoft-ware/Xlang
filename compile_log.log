@@ -10,7 +10,81 @@ import(headers:"lib/vmlib@latest/io.xlang");
 
 ptr_char s="Hello,World!\n";
 printLine(s);
+readLine(s);
+printLine(s);
 
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->7
+--->[reg0]
+--->8
+--->reg1
+--->regsb
+--->reg1
+--->regfp
+--->reg1
+--->15
+--->reg0
+--->[reg1]
+--->reg0
+--->[reg0]
+beforce:   \n
+processed: 
+
+--->reg1
+--->10
+--->reg1
+--->reg1
+--->reg0
+--->reg1
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->15
+--->reg0
+--->[reg0]
+--->0
+--->[reg0]
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->15
+--->reg1
+--->regsb
+--->reg1
+--->regfp
+--->reg1
+--->15
+--->reg2
+--->1
+--->reg1
+--->[reg1]
+--->reg1
+--->reg2
+--->[reg0]
+--->reg1
+--->8
+--->2
+--->17
+--->reg0
+--->1
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->regsp
+--->reg0
+--->1
+--->[reg0]
+--->8
 --->reg0
 --->regsb
 --->reg0
@@ -33,6 +107,82 @@ beforce:   \0
 processed: 
 --->reg1
 --->0
+--->reg1
+--->reg1
+--->reg0
+--->reg1
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->15
+--->reg0
+--->[reg0]
+--->0
+--->[reg0]
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->15
+--->reg1
+--->regsb
+--->reg1
+--->regfp
+--->reg1
+--->15
+--->reg2
+--->1
+--->reg1
+--->[reg1]
+--->reg1
+--->reg2
+--->[reg0]
+--->reg1
+--->8
+--->2
+--->17
+--->reg0
+--->1
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->regsp
+--->reg0
+--->1
+--->[reg0]
+--->8
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->7
+--->[reg0]
+--->8
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->15
+--->reg1
+--->1
+--->reg0
+--->[reg0]
+--->reg0
+--->reg1
+--->reg0
+--->[reg0]
+beforce:   \n
+processed: 
+
+--->reg1
+--->10
 --->reg1
 --->reg1
 --->reg0
@@ -101,6 +251,104 @@ processed:
 --->reg0
 --->1
 --->reg0
+--->13
+--->[reg0]
+--->8
+--->_readLine_int
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->regsp
+--->reg0
+--->1
+--->reg0
+--->13
+--->[reg0]
+--->8
+--->_printLine_int
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->regsp
+--->reg0
+--->1
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->7
+--->[reg0]
+--->8
+--->reg1
+--->regsb
+--->reg1
+--->regfp
+--->reg1
+--->15
+--->reg0
+--->[reg1]
+--->reg0
+--->[reg0]
+beforce:   \n
+processed: 
+
+--->reg1
+--->10
+--->reg1
+--->reg1
+--->reg0
+--->reg1
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->15
+--->reg0
+--->[reg0]
+--->0
+--->[reg0]
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->15
+--->reg1
+--->regsb
+--->reg1
+--->regfp
+--->reg1
+--->15
+--->reg2
+--->1
+--->reg1
+--->[reg1]
+--->reg1
+--->reg2
+--->[reg0]
+--->reg1
+--->8
+--->2
+--->17
+--->reg0
+--->1
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->regsp
+--->reg0
+--->1
+--->[reg0]
+--->8
+--->reg0
 --->regsb
 --->reg0
 --->regfp
@@ -171,6 +419,82 @@ processed:
 --->1
 --->[reg0]
 --->8
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->7
+--->[reg0]
+--->8
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->15
+--->reg1
+--->1
+--->reg0
+--->[reg0]
+--->reg0
+--->reg1
+--->reg0
+--->[reg0]
+beforce:   \n
+processed: 
+
+--->reg1
+--->10
+--->reg1
+--->reg1
+--->reg0
+--->reg1
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->15
+--->reg0
+--->[reg0]
+--->0
+--->[reg0]
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->15
+--->reg1
+--->regsb
+--->reg1
+--->regfp
+--->reg1
+--->15
+--->reg2
+--->1
+--->reg1
+--->[reg1]
+--->reg1
+--->reg2
+--->[reg0]
+--->reg1
+--->8
+--->2
+--->17
+--->reg0
+--->1
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->regsp
+--->reg0
+--->1
+--->[reg0]
+--->8
 [32m_vmstart:[0m
 mov reg0,0;
 mov_m [13],reg0,8;
@@ -182,8 +506,62 @@ mov reg0,regsb;
 sub reg0,regfp;
 sub reg0,regsp;
 add reg0,1;
+save;
+mov reg0,13;
+push [reg0],8;
+call _readLine_int;
+mov reg0,regsb;
+sub reg0,regfp;
+sub reg0,regsp;
+add reg0,1;
+save;
+mov reg0,13;
+push [reg0],8;
+call _printLine_int;
+mov reg0,regsb;
+sub reg0,regfp;
+sub reg0,regsp;
+add reg0,1;
 exit;
 [32m_printLine_int:[0m
+mov reg0,regsb;
+sub reg0,regfp;
+sub reg0,7;
+push [reg0],8;
+mov reg1,regsb;
+sub reg1,regfp;
+sub reg1,15;
+mov reg0,[reg1];
+push1b reg0,[reg0];
+mov reg1,10;
+push1b reg1,reg1;
+neq reg0,reg1;
+jt 2;
+jf 17;
+mov reg0,regsb;
+sub reg0,regfp;
+sub reg0,15;
+mov reg0,[reg0];
+out 0,[reg0];
+mov reg0,regsb;
+sub reg0,regfp;
+sub reg0,15;
+mov reg1,regsb;
+sub reg1,regfp;
+sub reg1,15;
+mov reg2,1;
+mov reg1,[reg1];
+add reg1,reg2;
+mov_m [reg0],reg1,8;
+jmp -25;
+mov reg0,1;
+push reg0,8;
+mov reg0,regsb;
+sub reg0,regfp;
+sub reg0,regsp;
+add reg0,1;
+ret [reg0],8;
+[32m_print_int:[0m
 mov reg0,regsb;
 sub reg0,regfp;
 sub reg0,7;
@@ -214,6 +592,46 @@ mov reg1,[reg1];
 add reg1,reg2;
 mov_m [reg0],reg1,8;
 jmp -25;
+mov reg0,1;
+push reg0,8;
+mov reg0,regsb;
+sub reg0,regfp;
+sub reg0,regsp;
+add reg0,1;
+ret [reg0],8;
+[32m_readLine_int:[0m
+mov reg0,regsb;
+sub reg0,regfp;
+sub reg0,7;
+push [reg0],8;
+mov reg0,regsb;
+sub reg0,regfp;
+sub reg0,15;
+mov reg1,1;
+mov reg0,[reg0];
+sub reg0,reg1;
+push1b reg0,[reg0];
+mov reg1,10;
+push1b reg1,reg1;
+neq reg0,reg1;
+jt 2;
+jf 17;
+mov reg0,regsb;
+sub reg0,regfp;
+sub reg0,15;
+mov reg0,[reg0];
+in 0,[reg0];
+mov reg0,regsb;
+sub reg0,regfp;
+sub reg0,15;
+mov reg1,regsb;
+sub reg1,regfp;
+sub reg1,15;
+mov reg2,1;
+mov reg1,[reg1];
+add reg1,reg2;
+mov_m [reg0],reg1,8;
+jmp -27;
 mov reg0,1;
 push reg0,8;
 mov reg0,regsb;
