@@ -5,7 +5,10 @@ Writed by xiaokang00010 at Febuary,12th,2021
 // for testing
 import(headers:"lib/vmlib@latest/io.xlang");
 
-ptr_char s="Hello,World!\n";
-printLine(s);
-readLine(s);
-printLine(s);
+func int main(){
+	char s[256];
+	ptr_char f=&s;
+	readLine(f);
+	printLine(f);
+};
+main();

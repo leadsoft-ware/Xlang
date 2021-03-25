@@ -474,6 +474,7 @@ ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in g
         std::string func_name = getFunctionRealName(ast);
         ASTree args = getFunctionCallArgs(ast);
         ASMBlock asb;
+        long total_size = 0;
         asb.genCommand("save").push();
         if(ast.this_node.type == TOK_DOT){
             ASTree fullname(Lexer(ASTree_APIs::MemberExpression::getFunctionPath(ast)));
@@ -490,8 +491,10 @@ ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in g
                 if(args.node[i].this_node.type == TOK_INTEGER || args.node[i].this_node.type == TOK_DOUBLE || args.node[i].this_node.type == TOK_CHARTER || args.node[i].this_node.type == TOK_STRING || (args.node[i].nodeT == ExpressionStatement && args.node[i].this_node.type != TOK_DOT)) /*do nothing*/;
                 else realarg0 = "[" + realarg0 + "]";
                 asb.genCommand("push").genArg(realarg0).genArg(std::to_string(getMemberSize(args.node[i]))).push();
+                total_size += getMemberSize(args.node[i]);
             }
         }
+        asb.genCommand("sub").genArg("regfp").genNumArg(total_size).push();
         //std::cout << "\033[32mGuess Result:\033[0m" << guessType(ast) << " " << getFunctionRealName(ast) <<  std::endl;
         asb.genCommand("call").genArg(funcnameInTab(func_name)).\
         genCommand("mov").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("regsb").\
@@ -654,7 +657,7 @@ ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in g
                         continue;
                     }
                     symbol_table[ast.node[i].this_node.str] = Symbol(arrayt);
-                    asb.genCommand("sub").genArg("regsp").genArg(std::to_string(arrayt.size)); // stack由上往下
+                    asb.genCommand("add").genArg("regsp").genArg(std::to_string(arrayt.size)); // stack由上往下
                 }
                 if(ast.node[i].nodeT == Id){
                     if(mode){
@@ -665,7 +668,7 @@ ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in g
                         continue;
                     }
                     symbol_table[ast.node[i].this_node.str] = Symbol(typen);
-                    asb.genCommand("sub").genArg("regsp").genArg(std::to_string(typen.size)); // stack由上往下
+                    asb.genCommand("add").genArg("regsp").genArg(std::to_string(typen.size)); // stack由上往下
                 }
                 if(ast.node[i].nodeT == ExpressionStatement && ast.node[i].this_node.type == TOK_EQUAL){
                     // has init value

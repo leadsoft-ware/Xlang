@@ -8,10 +8,13 @@ Writed by xiaokang00010 at Febuary,12th,2021
 // for testing
 import(headers:"lib/vmlib@latest/io.xlang");
 
-ptr_char s="Hello,World!\n";
-printLine(s);
-readLine(s);
-printLine(s);
+func int main(){
+	char s[256];
+	ptr_char f=&s;
+	readLine(f);
+	printLine(f);
+};
+main();
 
 --->reg0
 --->regsb
@@ -232,16 +235,8 @@ processed:
 --->1
 --->[reg0]
 --->8
---->reg0
---->0
---->[13]
---->reg0
---->8
---->reg0
---->13
---->[reg0]
---->8
---->_printLine_int
+--->regfp
+--->_main_int
 --->reg0
 --->regsb
 --->reg0
@@ -250,10 +245,25 @@ processed:
 --->regsp
 --->reg0
 --->1
+--->regsp
+--->256
 --->reg0
---->13
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->255
+--->reg0
+--->8
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->263
 --->[reg0]
 --->8
+--->regfp
 --->_readLine_int
 --->reg0
 --->regsb
@@ -264,9 +274,14 @@ processed:
 --->reg0
 --->1
 --->reg0
---->13
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->263
 --->[reg0]
 --->8
+--->regfp
 --->_printLine_int
 --->reg0
 --->regsb
@@ -496,33 +511,42 @@ processed:
 --->[reg0]
 --->8
 [32m_vmstart:[0m
-mov reg0,0;
-mov_m [13],reg0,8;
 save;
-mov reg0,13;
-push [reg0],8;
-call _printLine_int;
+sub regfp,0;
+call _main_int;
 mov reg0,regsb;
 sub reg0,regfp;
 sub reg0,regsp;
 add reg0,1;
+exit;
+[32m_main_int:[0m
+add regsp,256;
+mov reg0,regsb;
+sub reg0,regfp;
+sub reg0,255;
+push reg0,8;
 save;
-mov reg0,13;
+mov reg0,regsb;
+sub reg0,regfp;
+sub reg0,263;
 push [reg0],8;
+sub regfp,8;
 call _readLine_int;
 mov reg0,regsb;
 sub reg0,regfp;
 sub reg0,regsp;
 add reg0,1;
 save;
-mov reg0,13;
+mov reg0,regsb;
+sub reg0,regfp;
+sub reg0,263;
 push [reg0],8;
+sub regfp,8;
 call _printLine_int;
 mov reg0,regsb;
 sub reg0,regfp;
 sub reg0,regsp;
 add reg0,1;
-exit;
 [32m_printLine_int:[0m
 mov reg0,regsb;
 sub reg0,regfp;

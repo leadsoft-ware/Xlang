@@ -464,7 +464,7 @@ class VMRuntime{
                 pc.offset = program + vme.label_array[intc.RegisteredProcessingFunction[intc.HasInterrputSignal].intc].start;
                 continue;
             }
-            //if(pc.offset->c.intc != realmap["ret"]) disasm();
+            if(pc.offset->c.intc != realmap["ret"]) disasm();
             if(pc.offset->c.intc == realmap["mov"]){
                 // Normal move command, only support 8 byte
                 char* _dest;
@@ -572,6 +572,7 @@ class VMRuntime{
                     regs[i] = *stack_a.pop();
                 }
                 public_temp_place = *stack_a.pop();
+                
                 long size = (pc.offset+2)->c.intc;
                 stack_a.push(_Src,size);
                 pc.offset = (ByteCode*)public_temp_place.ptrc;
