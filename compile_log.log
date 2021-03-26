@@ -9,10 +9,8 @@ Writed by xiaokang00010 at Febuary,12th,2021
 import(headers:"lib/vmlib@latest/io.xlang");
 
 func int main(){
-	char s[256];
+	char s[16];
 	ptr_char f=&s;
-	readLine(f);
-	printLine(f);
 };
 main();
 
@@ -246,51 +244,15 @@ processed:
 --->reg0
 --->1
 --->regsp
---->256
+--->16
 --->reg0
 --->regsb
 --->reg0
 --->regfp
 --->reg0
---->255
+--->15
 --->reg0
 --->8
---->reg0
---->regsb
---->reg0
---->regfp
---->reg0
---->263
---->[reg0]
---->8
---->regfp
---->_readLine_int
---->reg0
---->regsb
---->reg0
---->regfp
---->reg0
---->regsp
---->reg0
---->1
---->reg0
---->regsb
---->reg0
---->regfp
---->reg0
---->263
---->[reg0]
---->8
---->regfp
---->_printLine_int
---->reg0
---->regsb
---->reg0
---->regfp
---->reg0
---->regsp
---->reg0
---->1
 --->reg0
 --->regsb
 --->reg0
@@ -520,33 +482,11 @@ sub reg0,regsp;
 add reg0,1;
 exit;
 [32m_main_int:[0m
-add regsp,256;
+add regsp,16;
 mov reg0,regsb;
 sub reg0,regfp;
-sub reg0,255;
+sub reg0,15;
 push reg0,8;
-save;
-mov reg0,regsb;
-sub reg0,regfp;
-sub reg0,263;
-push [reg0],8;
-sub regfp,8;
-call _readLine_int;
-mov reg0,regsb;
-sub reg0,regfp;
-sub reg0,regsp;
-add reg0,1;
-save;
-mov reg0,regsb;
-sub reg0,regfp;
-sub reg0,263;
-push [reg0],8;
-sub regfp,8;
-call _printLine_int;
-mov reg0,regsb;
-sub reg0,regfp;
-sub reg0,regsp;
-add reg0,1;
 [32m_printLine_int:[0m
 mov reg0,regsb;
 sub reg0,regfp;

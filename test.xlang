@@ -6,9 +6,8 @@ Writed by xiaokang00010 at Febuary,12th,2021
 import(headers:"lib/vmlib@latest/io.xlang");
 
 func int main(){
-	char s[256];
+	char s[16];
 	ptr_char f=&s;
-	readLine(f);
-	printLine(f);
+	return 0;
 };
 main();

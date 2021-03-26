@@ -101,6 +101,7 @@ struct heap_item_t{
 
 class Runtime_Stack{
     public:
+    int count;
     int AllocSize;
     char* base_memory = nullptr;
     long int fp,sp;
@@ -115,6 +116,8 @@ class Runtime_Stack{
         base_memory = nullptr;
     }
     void push(Content c){
+        count ++;
+        //std::cout << "push:" << c.intc << std::endl;
         char* ref = base_memory + AllocSize - 1 - fp - sp - 8 + 1;
         for(int i = 0;i < 8;i=i+1,ref++){
             (*ref) = c.chc[i];
@@ -122,6 +125,8 @@ class Runtime_Stack{
         sp += 8;
     }
     void push(char* chs,size_t size){
+        count ++;
+        //std::cout << "pushsize:" << size << std::endl;
         char* ref = base_memory + AllocSize - 1 - fp - sp - size + 1;
         for(int i = 0;i < size;i=i+1,ref++){
             (*ref) = chs[i];
@@ -129,13 +134,17 @@ class Runtime_Stack{
         sp += size;
     }
     Content* pop(){
+        count --;
         Content* ref = (Content*)(base_memory + AllocSize - 1 - fp - sp + 1);
         sp -= 8;
+        // std::cout << "pop:" << ref->intc << std::endl;
         return ref;
     }
     char* pop(size_t size){
+        count --;
         char* ret = base_memory + AllocSize - 1 - fp - sp + 1;
         sp -= size;
+        //std::cout << "popsize:" << size << std::endl;
         return ret;
     }
     void save(){
@@ -327,6 +336,11 @@ struct DevicePackage{
     char device_name[32];
 };
 
+// #if defined __ENABLE_BACKTRACE
+std::stack<std::string> backtrace;
+// endif
+
+
 #define __XVMDK_HOST
 #include "../lib/XVMDK/framework.cpp"
 
@@ -464,7 +478,7 @@ class VMRuntime{
                 pc.offset = program + vme.label_array[intc.RegisteredProcessingFunction[intc.HasInterrputSignal].intc].start;
                 continue;
             }
-            if(pc.offset->c.intc != realmap["ret"]) disasm();
+            //if(pc.offset->c.intc != realmap["ret"]) disasm();
             if(pc.offset->c.intc == realmap["mov"]){
                 // Normal move command, only support 8 byte
                 char* _dest;
@@ -562,10 +576,14 @@ class VMRuntime{
                 else if(pc.offset->c.intc == realmap["jf"] && regflag == 0) {pc += s.intc;continue;}
             }else if(pc.offset->c.intc == realmap["call"]){
                 //long i=;
+                backtrace.push((char*)&vme.label_array[(pc.offset+1)->c.intc].label_n);
+                std::cout << "\033[31m]]] tracking:" << backtrace.top() << "\033[0m" << std::endl;
                 pc = program + vme.label_array[(pc.offset+1)->c.intc].start;
                 continue;
             }else if(pc.offset->c.intc == realmap["ret"]){
+                std::cout << "\033[31m]]] reted:" << backtrace.top() << "\033[0m" << std::endl;
                 char* _Src = GetMemberAddress(*(pc.offset+1));
+                stack_a.sp = 0;
                 stack_a.pop_frame();
                 regflag = stack_a.pop(1);
                 for(int i = 31;i >= 0;i--){
