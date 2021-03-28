@@ -11,6 +11,9 @@ import(headers:"lib/vmlib@latest/io.xlang");
 func int main(){
 	char s[16];
 	ptr_char f=&s;
+	readLine(f);
+	printLine(f);
+	return 0;
 };
 main();
 
@@ -258,6 +261,54 @@ processed:
 --->reg0
 --->regfp
 --->reg0
+--->23
+--->[reg0]
+--->8
+--->regfp
+--->_readLine_int
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->regsp
+--->reg0
+--->1
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->23
+--->[reg0]
+--->8
+--->regfp
+--->_printLine_int
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->regsp
+--->reg0
+--->1
+--->reg0
+--->0
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->regsp
+--->reg0
+--->1
+--->[reg0]
+--->8
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
 --->7
 --->[reg0]
 --->8
@@ -487,6 +538,35 @@ mov reg0,regsb;
 sub reg0,regfp;
 sub reg0,15;
 push reg0,8;
+save;
+mov reg0,regsb;
+sub reg0,regfp;
+sub reg0,23;
+push [reg0],8;
+sub regfp,8;
+call _readLine_int;
+mov reg0,regsb;
+sub reg0,regfp;
+sub reg0,regsp;
+add reg0,1;
+save;
+mov reg0,regsb;
+sub reg0,regfp;
+sub reg0,23;
+push [reg0],8;
+sub regfp,8;
+call _printLine_int;
+mov reg0,regsb;
+sub reg0,regfp;
+sub reg0,regsp;
+add reg0,1;
+mov reg0,0;
+push reg0,8;
+mov reg0,regsb;
+sub reg0,regfp;
+sub reg0,regsp;
+add reg0,1;
+ret [reg0],8;
 [32m_printLine_int:[0m
 mov reg0,regsb;
 sub reg0,regfp;

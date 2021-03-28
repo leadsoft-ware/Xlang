@@ -8,6 +8,8 @@ import(headers:"lib/vmlib@latest/io.xlang");
 func int main(){
 	char s[16];
 	ptr_char f=&s;
+	readLine(f);
+	printLine(f);
 	return 0;
 };
 main();
