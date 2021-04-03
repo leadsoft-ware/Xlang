@@ -2,3 +2,7 @@
 #define VM_INVALID_HASH  00000010
 #define VM_INVALID_STRU  00000100
 #define VM_SUCCES_LOADED 00000000
+
+#define __VM_CODENAME  "CLANNAD"
+#define __VM_VERSION   "Alpha"
+#define __VM_BUILD     1

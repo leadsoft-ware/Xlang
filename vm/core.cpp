@@ -221,35 +221,103 @@ device_host devhost;
 
 class VMRuntime{
     public:
+    long Alloc_Size;
     VMExec vmexec;
     device_host device_bridge;
+    InterrputControler intc;
     Content regs[32];
     PC_Register pc;
     std::map<std::string,bool> vm_rules;
     bool    regflag;
     char* malloc_place;
     TSS* thisTSS;
+
+    // 反编译当前语句
+    void disasm(){
+        std::cout << COMMAND_MAP[pc.offset->c.intc] << " ";
+        
+    }
+    char* getAddress(ByteCode t){
+        if(t.opid == NormalRegister){
+            return (char*)&regs[t.c.intc];
+        }else if(t.opid == UnusualRegister){
+            if(t.c.intc == 0) return (char*)&thisTSS->fp;// fp
+            if(t.c.intc == 1) return (char*)&thisTSS->sp;// sp
+            if(t.c.intc == 3) return (char*)&Alloc_Size;// sb
+        }else if(t.opid == Address){
+            return (char*)malloc_place + thisTSS->basememory.intc + t.c.intc;
+        }else if(t.opid == Address_Register){
+            return (char*)malloc_place + thisTSS->basememory.intc + regs[t.c.intc].intc;
+        }
+        return nullptr;
+    }
+    
     VMRuntime(VMExec& vme,int fd){
         vmexec = vme;
-        malloc_place = (char*) malloc(vme.cpool.size * 3 + vme.head.code_length * sizeof(ByteCode));
+        malloc_place = (char*) malloc(vme.cpool.size * 3 + vme.head.code_length * sizeof(ByteCode) + sizeof(TSS));
         char* memtop = malloc_place;
         // fill constant pool 
         memcpy(memtop,vmexec.cpool.pool,vmexec.cpool.size);
         memtop += vmexec.cpool.size;
+        memcpy(memtop,vmexec.code_array,vmexec.head.code_length * sizeof(ByteCode));
+        memtop += vmexec.head.code_length * sizeof(ByteCode);
+        thisTSS->pc.intc = pointerSubtract(memtop , malloc_place);
         thisTSS = (TSS*) memtop;
         thisTSS->basememory.intc = 0;
         thisTSS->beforceTSS.intc = pointerSubtract(thisTSS , malloc_place);
         thisTSS->fp.intc = 0;
         thisTSS->sp.intc = 0;
-        thisTSS->pc.intc = 0;
         memtop += sizeof(TSS);
-        thisTSS->vstack_start.intc = pointerSubtract(memtop , malloc_place);
+        thisTSS->vstack_start.intc = vme.cpool.size * 3 + vme.head.code_length * sizeof(ByteCode) + sizeof(TSS) - 1; // 从上往下
+        Alloc_Size = vme.cpool.size * 3 + vme.head.code_length * sizeof(ByteCode) + sizeof(TSS) - 1;
+    }
+    void SeekToStart(){
+        long Origin;
+        for(int i = 0;i < vmexec.head.code_label_count;i++){
+            if(std::string(vmexec.label_array[i].label_n) == "_vmstart") Origin = i;
+        }
+        pc.offset = (ByteCode*)malloc_place + thisTSS->basememory.intc + thisTSS->pc.intc + vmexec.label_array[Origin].start;
     }
     void StartMainLoop(){
-
+        SeekToStart();
+        while(COMMAND_MAP[pc.offset->c.intc] != "exit"){
+            if(intc.HasInterrputSignal){
+            
+            }
+            if(COMMAND_MAP[pc.offset->c.intc] == "mov"){
+                char* movto = getAddress(*(pc.offset+1));
+                if(movto == nullptr) throw VMError("CommandError: Move Command must have a address to save data");
+                Content source;
+                if(getAddress(*(pc.offset+2)) != nullptr) source = *(Content*)getAddress(*(pc.offset+2));
+                else source = (pc.offset+2)->c;
+                *(Content*)movto = source;
+            }
+            if(COMMAND_MAP[pc.offset->c.intc] == "mov_m"){
+                char* movto = getAddress(*(pc.offset+1));char* src = getAddress(*(pc.offset+2));long size = (pc.offset+3)->c.intc;
+                if(movto == nullptr) throw VMError("CommandError: Move Command must have a address to save data");
+                if(src == nullptr){
+                    *(Content*)movto = (pc.offset+2)->c;
+                }else{
+                    for(int i = 0;i < size;i++) movto[i] = src[i];
+                }
+            }
+            if(COMMAND_MAP[pc.offset->c.intc] == "push"){
+                thisTSS->sp.intc -= (pc.offset+2)->c.intc;
+                thisTSS->sp.intc += 1;
+                char* src = getAddress(*(pc.offset+1));char* movto = (char*)malloc_place + thisTSS->basememory.intc + Alloc_Size - thisTSS->fp.intc - thisTSS->sp.intc;
+                if(src == nullptr){
+                    *(Content*)movto = (pc.offset+1)->c;
+                }else{
+                    for(int i = 0;i < (pc.offset+2)->c.intc;i++) movto[i] = src[i];
+                }
+            }
+        }
     }
     void Run(){
-
+        if(vm_rules["verbose"] == true){
+            std::cout << "Xlang " << __VM_VERSION << " Build:" << __VM_BUILD << " Codename:" << __VM_CODENAME << std::endl;
+        }
+        StartMainLoop();
     }
 };
 
