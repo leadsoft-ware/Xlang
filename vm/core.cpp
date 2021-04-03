@@ -103,6 +103,7 @@ struct TSS{
     Content beforceTSS;
     Content fp,sp;
     Content pc;
+    bool    regflag;
     Content regs[32];
     Content basememory;
     Content custom_code_labels;
@@ -225,7 +226,7 @@ class VMRuntime{
     VMExec vmexec;
     device_host device_bridge;
     InterrputControler intc;
-    Content regs[32];
+    //Content regs[32];
     PC_Register pc;
     std::map<std::string,bool> vm_rules;
     bool    regflag;
@@ -239,7 +240,7 @@ class VMRuntime{
     }
     char* getAddress(ByteCode t){
         if(t.opid == NormalRegister){
-            return (char*)&regs[t.c.intc];
+            return (char*)&thisTSS->regs[t.c.intc];
         }else if(t.opid == UnusualRegister){
             if(t.c.intc == 0) return (char*)&thisTSS->fp;// fp
             if(t.c.intc == 1) return (char*)&thisTSS->sp;// sp
@@ -247,7 +248,7 @@ class VMRuntime{
         }else if(t.opid == Address){
             return (char*)malloc_place + thisTSS->basememory.intc + t.c.intc;
         }else if(t.opid == Address_Register){
-            return (char*)malloc_place + thisTSS->basememory.intc + regs[t.c.intc].intc;
+            return (char*)malloc_place + thisTSS->basememory.intc + thisTSS->regs[t.c.intc].intc;
         }
         return nullptr;
     }
@@ -311,6 +312,50 @@ class VMRuntime{
                     for(int i = 0;i < (pc.offset+2)->c.intc;i++) movto[i] = src[i];
                 }
             }
+            if(COMMAND_MAP[pc.offset->c.intc] == "pop"){
+                char* movto = getAddress(*(pc.offset+1));char* src=(char*)malloc_place + thisTSS->basememory.intc + Alloc_Size - thisTSS->fp.intc - thisTSS->sp.intc;
+                if(movto == nullptr) throw VMError("CommandError: pop: Bad Command Format");
+                for(int i = 0;i < (pc.offset+2)->c.intc;i++) movto[i] = src[i];
+                thisTSS->sp.intc += (pc.offset+2)->c.intc;
+                thisTSS->sp.intc -= 1; // 预留1b空位
+            }
+            if(COMMAND_MAP[pc.offset->c.intc] == "save"){
+                // 将所有寄存器的内容保存至栈中，并且开新帧
+                for(int i = 0;i < 32;i++){
+                    thisTSS->sp.intc += 8;
+                    thisTSS->sp.intc -= 1;
+                    char* movto = (char*)malloc_place + thisTSS->basememory.intc + Alloc_Size - thisTSS->fp.intc - thisTSS->sp.intc;
+                    *(Content*)movto = thisTSS->regs[i];
+                }
+                thisTSS->sp.intc += 8;
+                thisTSS->sp.intc -= 1;
+                *(Content*)((char*)malloc_place + thisTSS->basememory.intc + Alloc_Size - thisTSS->fp.intc - thisTSS->sp.intc) = thisTSS->fp;
+                thisTSS->sp.intc += 8;
+                thisTSS->sp.intc -= 1;
+                *(Content*)((char*)malloc_place + thisTSS->basememory.intc + Alloc_Size - thisTSS->fp.intc - thisTSS->sp.intc) = thisTSS->sp;
+                thisTSS->sp.intc += 1;
+                thisTSS->sp.intc -= 1;
+                *(bool*)((char*)malloc_place + thisTSS->basememory.intc + Alloc_Size - thisTSS->fp.intc - thisTSS->sp.intc) = thisTSS->regflag;
+                thisTSS->fp.intc += thisTSS->sp.intc;
+                thisTSS->sp.intc  = 0;
+            }
+            if(COMMAND_MAP[pc.offset->c.intc] == "pop_frame"){
+                thisTSS->sp.intc = 0;
+                thisTSS->regflag = *(bool*)((char*)malloc_place + thisTSS->basememory.intc + Alloc_Size - thisTSS->fp.intc - thisTSS->sp.intc);
+                thisTSS->sp.intc -= 1;
+                Content ready_sp = *(Content*)((char*)malloc_place + thisTSS->basememory.intc + Alloc_Size - thisTSS->fp.intc - thisTSS->sp.intc);
+                thisTSS->sp.intc -= 8;
+                Content ready_fp = *(Content*)((char*)malloc_place + thisTSS->basememory.intc + Alloc_Size - thisTSS->fp.intc - thisTSS->sp.intc);
+                ready_sp.intc -= 16; //还原至没有压入sp,fp的状态
+                ready_sp.intc += 2;  //同理
+                thisTSS->sp = ready_sp;
+                thisTSS->fp = ready_fp;
+                for(int i = 31;i >= 0;i--){
+                    thisTSS->regs[i] = *(Content*)((char*)malloc_place + thisTSS->basememory.intc + Alloc_Size - thisTSS->fp.intc - thisTSS->sp.intc);
+                    thisTSS->sp.intc -= 8;
+                    thisTSS->sp.intc += 1;
+                }
+            }
         }
     }
     void Run(){
@@ -324,8 +369,8 @@ class VMRuntime{
 void DebugOutput(VMRuntime rt, std::ostream &out = std::cout){
     out << "==========================[Debug Output]==========================\n";
     for(int i = 0;i < 32;i=i+1){
-        if(i < 10) out << "reg" << i << " : " << rt.regs[i].intc << " ";
-        else out << "reg" << i << ": " << rt.regs[i].intc << " ";
+        if(i < 10) out << "reg" << i << " : " << rt.thisTSS->regs[i].intc << " ";
+        else out << "reg" << i << ": " << rt.thisTSS->regs[i].intc << " ";
         if(i % 7 == 0 && i != 0) out <<  std::endl; 
     }
     out << "\n";
