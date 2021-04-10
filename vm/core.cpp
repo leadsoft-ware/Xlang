@@ -173,15 +173,57 @@ struct Device{
     void* io_request;
     void* normal_request;
 };
-struct DevicePackage{
-    std::vector<int> require_int_num;
-    char device_name[32];
-};
 
 // #if defined __ENABLE_BACKTRACE
 std::stack<std::string> backtrace;
 // endif
 
+class vm_stack{
+    public:
+    char* basememory;
+    TSS* task;
+    vm_stack(char* basemem,TSS* task){
+        basememory = basemem;
+        this->task = task;
+    }
+    void push(char* data,long size){
+        task->sp.intc += size;
+        char* realaddr = basememory + task->basememory.intc + task->_AllocSize.intc - task->fp.intc - task->sp.intc;
+        memcpy(realaddr,data,size);
+    }
+    void push(Content& s){
+        this->push((char*)&s.chc,8);
+    }
+    char* pop(long size){
+        char* ret = basememory + task->basememory.intc + task->_AllocSize.intc - task->fp.intc - task->sp.intc;
+        task->sp.intc -= size;
+        return ret;
+    }
+    Content* pop(){
+        return (Content*)pop(8);
+    }
+    void save(){
+        for(int i = 0;i < 32;i++){
+            push(task->regs[i]);
+        }
+        push(task->pc);
+        push((char*)&task->regflag,1);
+        push(task->fp);
+        push(task->sp);
+        task->fp.intc += task->sp.intc;
+        task->sp.intc = 0;
+    }
+    void restore(){
+        pop(task->sp.intc);
+        task->sp = *pop();
+        task->fp = *pop();
+        task->regflag = *pop(1);
+        task->pc = *pop();
+        for(int i=31;i >= 0;i++){
+            task->regs[i] = *pop();
+        }
+    }
+};
 
 #define __XVMDK_HOST
 #include "../lib/XVMDK/framework.cpp"
@@ -303,58 +345,17 @@ class VMRuntime{
                 }
             }
             if(COMMAND_MAP[pc.offset->c.intc] == "push"){
-                thisTSS->sp.intc -= (pc.offset+2)->c.intc;
-                thisTSS->sp.intc += 1;
-                char* src = getAddress(*(pc.offset+1));char* movto = (char*)malloc_place + thisTSS->basememory.intc + Alloc_Size - thisTSS->fp.intc - thisTSS->sp.intc;
-                if(src == nullptr){
-                    *(Content*)movto = (pc.offset+1)->c;
-                }else{
-                    for(int i = 0;i < (pc.offset+2)->c.intc;i++) movto[i] = src[i];
-                }
+                
             }
             if(COMMAND_MAP[pc.offset->c.intc] == "pop"){
-                char* movto = getAddress(*(pc.offset+1));char* src=(char*)malloc_place + thisTSS->basememory.intc + Alloc_Size - thisTSS->fp.intc - thisTSS->sp.intc;
-                if(movto == nullptr) throw VMError("CommandError: pop: Bad Command Format");
-                for(int i = 0;i < (pc.offset+2)->c.intc;i++) movto[i] = src[i];
-                thisTSS->sp.intc += (pc.offset+2)->c.intc;
-                thisTSS->sp.intc -= 1; // 预留1b空位
+                
             }
             if(COMMAND_MAP[pc.offset->c.intc] == "save"){
                 // 将所有寄存器的内容保存至栈中，并且开新帧
-                for(int i = 0;i < 32;i++){
-                    thisTSS->sp.intc += 8;
-                    thisTSS->sp.intc -= 1;
-                    char* movto = (char*)malloc_place + thisTSS->basememory.intc + Alloc_Size - thisTSS->fp.intc - thisTSS->sp.intc;
-                    *(Content*)movto = thisTSS->regs[i];
-                }
-                thisTSS->sp.intc += 8;
-                thisTSS->sp.intc -= 1;
-                *(Content*)((char*)malloc_place + thisTSS->basememory.intc + Alloc_Size - thisTSS->fp.intc - thisTSS->sp.intc) = thisTSS->fp;
-                thisTSS->sp.intc += 8;
-                thisTSS->sp.intc -= 1;
-                *(Content*)((char*)malloc_place + thisTSS->basememory.intc + Alloc_Size - thisTSS->fp.intc - thisTSS->sp.intc) = thisTSS->sp;
-                thisTSS->sp.intc += 1;
-                thisTSS->sp.intc -= 1;
-                *(bool*)((char*)malloc_place + thisTSS->basememory.intc + Alloc_Size - thisTSS->fp.intc - thisTSS->sp.intc) = thisTSS->regflag;
-                thisTSS->fp.intc += thisTSS->sp.intc;
-                thisTSS->sp.intc  = 0;
+                
             }
             if(COMMAND_MAP[pc.offset->c.intc] == "pop_frame"){
-                thisTSS->sp.intc = 0;
-                thisTSS->regflag = *(bool*)((char*)malloc_place + thisTSS->basememory.intc + Alloc_Size - thisTSS->fp.intc - thisTSS->sp.intc);
-                thisTSS->sp.intc -= 1;
-                Content ready_sp = *(Content*)((char*)malloc_place + thisTSS->basememory.intc + Alloc_Size - thisTSS->fp.intc - thisTSS->sp.intc);
-                thisTSS->sp.intc -= 8;
-                Content ready_fp = *(Content*)((char*)malloc_place + thisTSS->basememory.intc + Alloc_Size - thisTSS->fp.intc - thisTSS->sp.intc);
-                ready_sp.intc -= 16; //还原至没有压入sp,fp的状态
-                ready_sp.intc += 2;  //同理
-                thisTSS->sp = ready_sp;
-                thisTSS->fp = ready_fp;
-                for(int i = 31;i >= 0;i--){
-                    thisTSS->regs[i] = *(Content*)((char*)malloc_place + thisTSS->basememory.intc + Alloc_Size - thisTSS->fp.intc - thisTSS->sp.intc);
-                    thisTSS->sp.intc -= 8;
-                    thisTSS->sp.intc += 1;
-                }
+                
             }
         }
     }
