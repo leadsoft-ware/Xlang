@@ -460,8 +460,8 @@ ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in g
             return ASMBlock().genCommand("mov").genArg("reg" + std::to_string(getLastUsingRegId())).genArg(std::to_string((int)ast.this_node.str[0])).genCommand("push1b").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("reg" + std::to_string(getLastUsingRegId())).push();
         }
         if(symbol_table.find(ast.this_node.str) != symbol_table.end()){
-            if(ast.this_node.type != TOK_PTRID || (ast.this_node.type == TOK_DOT && ast.node[0].this_node.type != TOK_PTRID)) return ASMBlock().genCommand("mov").genArg("reg"+std::to_string(getLastUsingRegId())).genArg("regsb").genCommand("sub").genArg("reg"+std::to_string(getLastUsingRegId())).genArg("regfp").genCommand("sub").genArg("reg" + std::to_string(getLastUsingRegId())).genArg(std::to_string(symbol_table[ast.this_node.str].frame_position + getMemberSize(ast) - 1)).push();
-            else return ASMBlock().genCommand("mov").genArg("reg"+std::to_string(getLastUsingRegId()+1)).genArg("regsb").genCommand("sub").genArg("reg"+std::to_string(getLastUsingRegId()+1)).genArg("regfp").genCommand("sub").genArg("reg" + std::to_string(getLastUsingRegId()+1)).genArg(std::to_string(symbol_table[ast.this_node.str].frame_position + getMemberSize(ast) - 1)).genCommand("mov").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("[reg" + std::to_string(getLastUsingRegId()+1) + "]").push();
+            if(ast.this_node.type != TOK_PTRID || (ast.this_node.type == TOK_DOT && ast.node[0].this_node.type != TOK_PTRID)) return ASMBlock().genCommand("mov").genArg("reg"+std::to_string(getLastUsingRegId())).genArg("regsb").genCommand("sub").genArg("reg"+std::to_string(getLastUsingRegId())).genArg("regfp").genCommand("sub").genArg("reg" + std::to_string(getLastUsingRegId())).genArg(std::to_string(symbol_table[ast.this_node.str].frame_position + getMemberSize(ast))).push();
+            else return ASMBlock().genCommand("mov").genArg("reg"+std::to_string(getLastUsingRegId()+1)).genArg("regsb").genCommand("sub").genArg("reg"+std::to_string(getLastUsingRegId()+1)).genArg("regfp").genCommand("sub").genArg("reg" + std::to_string(getLastUsingRegId()+1)).genArg(std::to_string(symbol_table[ast.this_node.str].frame_position + getMemberSize(ast))).genCommand("mov").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("[reg" + std::to_string(getLastUsingRegId()+1) + "]").push();
         }
         if(global_symbol_table.find(ast.this_node.str) != global_symbol_table.end()){
             if(ast.this_node.type != TOK_PTRID || (ast.this_node.type == TOK_DOT && ast.node[0].this_node.type != TOK_PTRID)) return ASMBlock().genCommand("mov").genArg("reg" + std::to_string(getLastUsingRegId())).genArg(std::to_string(global_symbol_table[ast.this_node.str].frame_position)).push();
@@ -568,7 +568,7 @@ ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in g
             int fp_offset;
             if(symbol_table.count(ast.node[0].this_node.str)) fp_offset = type_pool[symbol_table[ast.node[0].this_node.str]._Typename].getOffset(ast.node[1],symbol_table[ast.node[0].this_node.str].frame_position);
             else if(global_symbol_table.count(ast.node[0].this_node.str)) fp_offset = type_pool[global_symbol_table[ast.node[0].this_node.str]._Typename].getOffset(ast.node[1],global_symbol_table[ast.node[0].this_node.str].frame_position);
-            if(symbol_table.count(ast.node[0].this_node.str)) return ASMBlock().genCommand("mov").genArg("reg"+std::to_string(getLastUsingRegId())).genArg("regsb").genCommand("sub").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("regfp").genCommand("sub").genArg("reg" + getLastUsingRegId()).genArg(std::to_string(fp_offset + getMemberSize(ast) - 1)).push(); // 低端序
+            if(symbol_table.count(ast.node[0].this_node.str)) return ASMBlock().genCommand("mov").genArg("reg"+std::to_string(getLastUsingRegId())).genArg("regsb").genCommand("sub").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("regfp").genCommand("sub").genArg("reg" + getLastUsingRegId()).genArg(std::to_string(fp_offset + getMemberSize(ast))).push(); // 低端序
             else if(global_symbol_table.count(ast.node[0].this_node.str)) return ASMBlock().genCommand("mov").genArg("reg" + std::to_string(getLastUsingRegId())).genArg(std::to_string(fp_offset)).push();
             else throw CompileError("Variable " + ast.node[0].this_node.str + "doesn't exist");
         }
@@ -861,8 +861,7 @@ ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in g
                 asb.genCommand("push").genRegArg(getLastUsingRegId()).genNumArg(8).push();
                 asb.genCommand("mov").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("regsb").\
                 genCommand("sub").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("regfp").\
-                genCommand("sub").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("regsp").\
-                genCommand("add").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("1").push();
+                genCommand("sub").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("regsp").push();
             }
             return asb.genCommand("ret").genArg(realarg0).genArg(std::to_string(getMemberSize(ast.node[0])))/*.genCommand("push").genArg(realarg0).genArg(std::to_string(getMemberSize(ast.node[0])))*/.push();
         }

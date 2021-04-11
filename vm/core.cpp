@@ -140,6 +140,7 @@ class PC_Register{
         offset = (ByteCode*)start;
     }
     void operator++(int x){
+        std::cout << "operator execed: ++" << std::endl;
         while(true){
             offset++;
             if(offset->opid == Command) break;
@@ -311,13 +312,14 @@ class VMRuntime{
         memtop += vmexec.cpool.size;
         memcpy(memtop,vmexec.code_array,vmexec.head.code_length * sizeof(ByteCode));
         memtop += vmexec.head.code_length * sizeof(ByteCode);
-        thisTSS->pc.intc = pointerSubtract(memtop , malloc_place);
         thisTSS = (TSS*) memtop;
         thisTSS->basememory.intc = 0;
         thisTSS->beforceTSS.intc = pointerSubtract(thisTSS , malloc_place);
         thisTSS->fp.intc = 0;
         thisTSS->sp.intc = 0;
+        thisTSS->pc.intc = pointerSubtract(memtop - (vmexec.head.code_length * sizeof(ByteCode)), malloc_place);
         memtop += sizeof(TSS);
+        
         thisTSS->vstack_start.intc = vme.cpool.size * 3 + vme.head.code_length * sizeof(ByteCode) + sizeof(TSS) - 1; // 从上往下
         Alloc_Size = vme.cpool.size * 3 + vme.head.code_length * sizeof(ByteCode) + sizeof(TSS) - 1;
         stack = vm_stack(malloc_place,thisTSS);
@@ -332,6 +334,7 @@ class VMRuntime{
     void StartMainLoop(){
         SeekToStart();
         while(COMMAND_MAP[pc.offset->c.intc] != "exit"){
+            std::cout << "?" << std::endl;
             if(intc.HasInterrputSignal){
             
             }
@@ -369,6 +372,7 @@ class VMRuntime{
             if(COMMAND_MAP[pc.offset->c.intc] == "pop_frame"){
                 stack.restore();
             }
+            pc++;
         }
     }
     void Run(){
