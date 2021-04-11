@@ -182,6 +182,7 @@ class vm_stack{
     public:
     char* basememory;
     TSS* task;
+    vm_stack(){}
     vm_stack(char* basemem,TSS* task){
         basememory = basemem;
         this->task = task;
@@ -215,13 +216,18 @@ class vm_stack{
     }
     void restore(){
         pop(task->sp.intc);
-        task->sp = *pop();
-        task->fp = *pop();
+        Content temp_sp = *pop();
+        Content temp_fp = *pop();
+        std::cout << temp_fp.intc << " " << temp_sp.intc << std::endl;
+        task->sp = temp_sp;
+        task->sp.intc -= 16; // 恢复至未压入sp,fp的状态
+        task->fp = temp_fp;
         task->regflag = *pop(1);
         task->pc = *pop();
-        for(int i=31;i >= 0;i++){
+        for(int i=31;i >= 0;i--){
             task->regs[i] = *pop();
         }
+        std::cout << task->fp.intc << " " << task->sp.intc << std::endl;
     }
 };
 
@@ -266,6 +272,7 @@ class VMRuntime{
     public:
     long Alloc_Size;
     VMExec vmexec;
+    vm_stack stack;
     device_host device_bridge;
     InterrputControler intc;
     //Content regs[32];
@@ -313,6 +320,7 @@ class VMRuntime{
         memtop += sizeof(TSS);
         thisTSS->vstack_start.intc = vme.cpool.size * 3 + vme.head.code_length * sizeof(ByteCode) + sizeof(TSS) - 1; // 从上往下
         Alloc_Size = vme.cpool.size * 3 + vme.head.code_length * sizeof(ByteCode) + sizeof(TSS) - 1;
+        stack = vm_stack(malloc_place,thisTSS);
     }
     void SeekToStart(){
         long Origin;
@@ -345,17 +353,21 @@ class VMRuntime{
                 }
             }
             if(COMMAND_MAP[pc.offset->c.intc] == "push"){
-                
+                char* src = getAddress(*(pc.offset+1));long size = (pc.offset+2)->c.intc;
+                if(src == nullptr) throw VMError("CommandError: the first arg of push must be a address or register");
+                stack.push(src,size);
             }
             if(COMMAND_MAP[pc.offset->c.intc] == "pop"){
-                
+                char* src = getAddress(*(pc.offset+1));long size = (pc.offset+2)->c.intc;
+                if(src == nullptr) throw VMError("CommandError: the first arg of pop must be a address or register");
+                memcpy(src,stack.pop(size),size);
             }
             if(COMMAND_MAP[pc.offset->c.intc] == "save"){
                 // 将所有寄存器的内容保存至栈中，并且开新帧
-                
+                stack.save();
             }
             if(COMMAND_MAP[pc.offset->c.intc] == "pop_frame"){
-                
+                stack.restore();
             }
         }
     }

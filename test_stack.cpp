@@ -14,5 +14,4 @@ int main(){
     f.intc = 114514;
     s.push(f);
     cout << s.pop()->intc << endl;
-
 }
