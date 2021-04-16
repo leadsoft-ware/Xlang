@@ -9,7 +9,8 @@ Writed by xiaokang00010 at Febuary,12th,2021
 import(headers:"lib/vmlib@latest/io.xlang");
 
 asm "mov reg0,114514";
-asm "mov [0],reg0,8";
+asm "mov reg1,233";
+asm "equ 111,111";
 
 --->reg0
 --->regsb
@@ -226,9 +227,10 @@ processed:
 --->8
 --->reg0
 --->114514
---->[0]
---->reg0
---->8
+--->reg1
+--->233
+--->111
+--->111
 --->reg0
 --->regsb
 --->reg0
@@ -444,7 +446,8 @@ processed:
 --->8
 [32m_vmstart:[0m
 mov reg0,114514;
-mov [0],reg0,8;
+mov reg1,233;
+equ 111,111;
 exit;
 [32m_printLine_int:[0m
 mov reg0,regsb;

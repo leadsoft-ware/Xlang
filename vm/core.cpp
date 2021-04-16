@@ -372,6 +372,32 @@ class VMRuntime{
             if(COMMAND_MAP[pc.offset->c.intc] == "pop_frame"){
                 stack.restore();
             }
+            if(COMMAND_MAP[pc.offset->c.intc] == "add" || COMMAND_MAP[pc.offset->c.intc] == "sub" || COMMAND_MAP[pc.offset->c.intc] == "mul" || COMMAND_MAP[pc.offset->c.intc] == "div"){
+                // src 必须是寄存器或者地址，不然计算完结果不知道放哪
+                Content *src,dst;
+                if(getAddress(*(pc.offset+1)) != nullptr) src = (Content*)getAddress(*(pc.offset+1));
+                if(getAddress(*(pc.offset+2)) != nullptr) dst = *(Content*)getAddress(*(pc.offset+2));
+                else dst=(pc.offset+2)->c;
+                if(COMMAND_MAP[pc.offset->c.intc] == "add") src->intc += dst.intc;
+                else if(COMMAND_MAP[pc.offset->c.intc] == "sub") src->intc -= dst.intc;
+                else if(COMMAND_MAP[pc.offset->c.intc] == "mul") src->intc *= dst.intc;
+                else if(COMMAND_MAP[pc.offset->c.intc] == "div") src->intc /= dst.intc;
+                else thisTSS->regflag = 0;
+            }
+            if(COMMAND_MAP[pc.offset->c.intc] == "equ" || COMMAND_MAP[pc.offset->c.intc] == "maxeq" || COMMAND_MAP[pc.offset->c.intc] == "mineq" || COMMAND_MAP[pc.offset->c.intc] == "neq" || COMMAND_MAP[pc.offset->c.intc] == "max" || COMMAND_MAP[pc.offset->c.intc] == "min"){
+                Content src,dst;
+                if(getAddress(*(pc.offset+1)) != nullptr) src = *(Content*)getAddress(*(pc.offset+1));
+                else src=(pc.offset+1)->c;
+                if(getAddress(*(pc.offset+2)) != nullptr) dst = *(Content*)getAddress(*(pc.offset+2));
+                else dst=(pc.offset+2)->c;
+                if(COMMAND_MAP[pc.offset->c.intc] == "equ" && src.intc == dst.intc) thisTSS->regflag = 1;
+                else if(COMMAND_MAP[pc.offset->c.intc] == "neq" && src.intc != dst.intc) thisTSS->regflag = 1;
+                else if(COMMAND_MAP[pc.offset->c.intc] == "maxeq" && src.intc >= dst.intc) thisTSS->regflag = 1;
+                else if(COMMAND_MAP[pc.offset->c.intc] == "mineq" && src.intc <= dst.intc) thisTSS->regflag = 1;
+                else if(COMMAND_MAP[pc.offset->c.intc] == "max" && src.intc > dst.intc) thisTSS->regflag = 1;
+                else if(COMMAND_MAP[pc.offset->c.intc] == "min" && src.intc < dst.intc) thisTSS->regflag = 1;
+                else thisTSS->regflag = 0;
+            }
             pc++;
         }
     }
@@ -391,7 +417,7 @@ void DebugOutput(VMRuntime rt, std::ostream &out = std::cout){
         if(i % 7 == 0 && i != 0) out <<  std::endl; 
     }
     out << "\n";
-    out << "REGFLAG:" << rt.regflag << " PC:" << rt.pc.offset <<  std::endl;
+    out << "REGFLAG:" << rt.thisTSS->regflag << " PC:" << rt.pc.offset <<  std::endl;
     out << "==========================[EndOf Output]==========================\n";
 }
 

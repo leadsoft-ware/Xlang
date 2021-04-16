@@ -6,4 +6,5 @@ Writed by xiaokang00010 at Febuary,12th,2021
 import(headers:"lib/vmlib@latest/io.xlang");
 
 asm "mov reg0,114514";
-asm "mov [0],reg0,8";
+asm "mov reg1,233";
+asm "equ 111,111";
