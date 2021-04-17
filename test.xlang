@@ -3,8 +3,6 @@ This is a test file for Xlang compiler
 Writed by xiaokang00010 at Febuary,12th,2021
 */
 // for testing
-import(headers:"lib/vmlib@latest/io.xlang");
-
-asm "mov reg0,114514";
-asm "mov reg1,233";
-asm "equ 111,111";
+for(int i = 0,i <= 10,i=i+1){
+	asm "add reg31,1";
+};

@@ -304,6 +304,8 @@ namespace ConstPool_Apis
         cpool.pool = (char*)realloc(cpool.pool,size);
         cpool.items = (size_t*)malloc(1024);
         memset(cpool.items,0,1024);
+        cpool.size = 0;
+        cpool.count = 0;
     }
     addr_t Insert(ConstantPool& cpool,char* _Src,addr_t size){
         memcpy(cpool.pool + cpool.items[cpool.count],_Src,size);
@@ -1071,9 +1073,14 @@ namespace Bytecode{
         ret.label_array = codelbls;
         ret.code_array = (ByteCode*) bytecode.data();
         ret.head.support_vm_build = 0001;
+        ret.head.a_msg.build = 1;
+        ret.head.a_msg.major = 1;
+        ret.head.a_msg.minjor = 0;
+        strcpy(ret.head.a_msg.ProgramName,"test");
+        strcpy(ret.head.a_msg.AuthorName,"test");
         ret.head.hash = 0x114514ff;
         ret.head.code_label_count = togen.size();
-        ret.head.code_length = bytecode.size();
+        ret.head.code_length = bytecode.size() - 1;
         return ret;
     }
 };

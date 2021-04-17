@@ -13,7 +13,6 @@ int main(int argc,char** argv){
         devhost.LoadVMDevice(&vmr,argv[i]);
     }
     //try{
-    //disasm(vme.code_array,vme.head.code_length);
     #ifndef __DEBUG_DISASM
     vmr.Run();
     #endif

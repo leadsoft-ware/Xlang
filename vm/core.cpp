@@ -89,6 +89,8 @@ int LoadVMExec(char* filename,VMExec& vme){
     read(fd,vme.code_array,sizeof(ByteCode) * vme.head.code_length);
 
     read(fd,&vme.cpool.size,8);
+    vme.cpool.pool = (char*)malloc(vme.cpool.size);
+    read(fd,vme.cpool.pool,vme.cpool.size);
     return fd;
 }
 
@@ -128,16 +130,19 @@ std::string COMMAND_MAP[] = {
     "tclear","tset","trestore", // 分别为清除中断处理状态，设置中断处理状态，返回主任务
     "labelg","labels", // label-get label-set
 };
-std::map<std::string,long> realmap;
 class PC_Register{
     public:
+    TSS* task;
     std::string* basestr;
     ByteCode* offset;
     long current_offset;
     PC_Register(){};
-    PC_Register(std::string& basestr,void* start){
+    PC_Register(std::string& basestr,TSS* task,void* start){
         this->basestr = &basestr;
         offset = (ByteCode*)start;
+    }
+    void updateTask(){
+        task->pc.intc = pointerSubtract(offset,basestr);
     }
     void operator++(int x){
         std::cout << "operator execed: ++" << std::endl;
@@ -145,20 +150,24 @@ class PC_Register{
             offset++;
             if(offset->opid == Command) break;
         }
+        updateTask();
     }
     void operator--(int x){
         while(true){
             offset--;
             if(offset->opid == Command) break;
         }
+        updateTask();
     }
     void operator+=(long c){
         //long  = 0;
         if(c > 0) for(int i = 0;i < c;i++) (*this)++;
         if(c < 0) for(int i = 0;i < 0-c;i++) (*this)--;
+        updateTask();
     }
     void operator=(ByteCode* pos){
         offset = pos;
+        updateTask();
     }
 };
 
@@ -284,9 +293,18 @@ class VMRuntime{
     TSS* thisTSS;
 
     // 反编译当前语句
-    void disasm(){
-        std::cout << COMMAND_MAP[pc.offset->c.intc] << " ";
-        
+    void disasm(std::ostream &out = std::cout){
+        out << COMMAND_MAP[pc.offset->c.intc] << " ";
+        if((pc.offset+1)->opid == Command) {std::cout << ";\n";return;}
+        for(auto i = pc.offset + 1;(i)->opid != Command;i=i+1){
+            if(i->opid == Number) out << i->c.intc;
+            if(i->opid == NormalRegister) out << "reg" << i->c.intc;
+            if(i->opid == UnusualRegister) out << "ureg" << i->c.intc;
+            if(i->opid == Address) out << "[" << i->c.intc << "]";
+            if(i->opid == Address_Register) out << "[reg" << i->c.intc << "]";
+            out << ",";
+        }
+        out << "\b;" << std::endl;
     }
     char* getAddress(ByteCode t){
         if(t.opid == NormalRegister){
@@ -310,7 +328,9 @@ class VMRuntime{
         // fill constant pool 
         memcpy(memtop,vmexec.cpool.pool,vmexec.cpool.size);
         memtop += vmexec.cpool.size;
+
         memcpy(memtop,vmexec.code_array,vmexec.head.code_length * sizeof(ByteCode));
+        pc.offset = (ByteCode*)memtop;
         memtop += vmexec.head.code_length * sizeof(ByteCode);
         thisTSS = (TSS*) memtop;
         thisTSS->basememory.intc = 0;
@@ -323,13 +343,14 @@ class VMRuntime{
         thisTSS->vstack_start.intc = vme.cpool.size * 3 + vme.head.code_length * sizeof(ByteCode) + sizeof(TSS) - 1; // 从上往下
         Alloc_Size = vme.cpool.size * 3 + vme.head.code_length * sizeof(ByteCode) + sizeof(TSS) - 1;
         stack = vm_stack(malloc_place,thisTSS);
+        pc.task = thisTSS;
     }
     void SeekToStart(){
         long Origin;
         for(int i = 0;i < vmexec.head.code_label_count;i++){
             if(std::string(vmexec.label_array[i].label_n) == "_vmstart") Origin = i;
         }
-        pc.offset = (ByteCode*)malloc_place + thisTSS->basememory.intc + thisTSS->pc.intc + vmexec.label_array[Origin].start;
+        pc.offset = (ByteCode*)(malloc_place + thisTSS->basememory.intc + thisTSS->pc.intc + vmexec.label_array[Origin].start);
     }
     void StartMainLoop(){
         SeekToStart();
@@ -382,7 +403,6 @@ class VMRuntime{
                 else if(COMMAND_MAP[pc.offset->c.intc] == "sub") src->intc -= dst.intc;
                 else if(COMMAND_MAP[pc.offset->c.intc] == "mul") src->intc *= dst.intc;
                 else if(COMMAND_MAP[pc.offset->c.intc] == "div") src->intc /= dst.intc;
-                else thisTSS->regflag = 0;
             }
             if(COMMAND_MAP[pc.offset->c.intc] == "equ" || COMMAND_MAP[pc.offset->c.intc] == "maxeq" || COMMAND_MAP[pc.offset->c.intc] == "mineq" || COMMAND_MAP[pc.offset->c.intc] == "neq" || COMMAND_MAP[pc.offset->c.intc] == "max" || COMMAND_MAP[pc.offset->c.intc] == "min"){
                 Content src,dst;
@@ -398,6 +418,15 @@ class VMRuntime{
                 else if(COMMAND_MAP[pc.offset->c.intc] == "min" && src.intc < dst.intc) thisTSS->regflag = 1;
                 else thisTSS->regflag = 0;
             }
+            if(COMMAND_MAP[pc.offset->c.intc] == "jmp" || COMMAND_MAP[pc.offset->c.intc] == "jt" || COMMAND_MAP[pc.offset->c.intc] == "jf"){
+                Content src;
+                if(getAddress(*(pc.offset+1)) != nullptr) src = *(Content*)getAddress(*(pc.offset+1));
+                else src = (pc.offset+1)->c;
+                if(COMMAND_MAP[pc.offset->c.intc] == "jmp" || (COMMAND_MAP[pc.offset->c.intc] == "jt" && thisTSS->regflag == true) || (COMMAND_MAP[pc.offset->c.intc] == "jf" && thisTSS->regflag == false)){
+                    pc += src.intc;
+                    continue;
+                }
+            }
             pc++;
         }
     }
@@ -409,6 +438,19 @@ class VMRuntime{
     }
 };
 
+void disasm(ByteCode* program,size_t length){
+    std::cout << "total length:" << length << std::endl;
+    for(int i = 0;i < length;i++){
+        if((program+i)->opid == Command) std::cout << std::endl << COMMAND_MAP[(program+i)->c.intc] << " ";
+        if((program+i)->opid == Number)  std::cout << (program + i)->c.intc << ",";
+        if((program+i)->opid == NormalRegister) std::cout << "reg" << (program + i)->c.intc << ",";
+        if((program+i)->opid == Address_Register) std::cout << "[" << "reg" << (program + i)->c.intc << "],";
+        if((program+i)->opid == UnusualRegister) std::cout << "ureg" << (program + i)->c.intc << ",";
+        if((program+i)->opid == Address) std::cout << "[" << (program + i)->c.intc << "],";
+    }
+}
+
+
 void DebugOutput(VMRuntime rt, std::ostream &out = std::cout){
     out << "==========================[Debug Output]==========================\n";
     for(int i = 0;i < 32;i=i+1){
@@ -417,7 +459,7 @@ void DebugOutput(VMRuntime rt, std::ostream &out = std::cout){
         if(i % 7 == 0 && i != 0) out <<  std::endl; 
     }
     out << "\n";
-    out << "REGFLAG:" << rt.thisTSS->regflag << " PC:" << rt.pc.offset <<  std::endl;
+    out << "REGFLAG:" << rt.thisTSS->regflag << " PC:" << rt.thisTSS->pc.intc <<  std::endl;
     out << "==========================[EndOf Output]==========================\n";
 }
 
