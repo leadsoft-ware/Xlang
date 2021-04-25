@@ -108,7 +108,7 @@ struct TSS{
     bool    regflag;
     Content regs[32];
     Content basememory;
-    Content custom_code_labels;
+    Content code_labels;
     Content vstack_start;
     Content _AllocSize;
 };
@@ -323,12 +323,15 @@ class VMRuntime{
     
     VMRuntime(VMExec& vme,int fd){
         vmexec = vme;
-        malloc_place = (char*) malloc(vme.cpool.size * 3 + vme.head.code_length * sizeof(ByteCode) + sizeof(TSS));
+        malloc_place = (char*) malloc(vme.cpool.size * 3 + vme.head.code_length * sizeof(ByteCode) + sizeof(TSS) + (sizeof(CodeLabel) * vme.head.code_label_count));
         char* memtop = malloc_place;
         // fill constant pool 
         memcpy(memtop,vmexec.cpool.pool,vmexec.cpool.size);
         memtop += vmexec.cpool.size;
-
+        // rewrite CodeLabel 
+        //codelbl_addr.intc = pointerSubtract(memtop,malloc_place);
+        memcpy(memtop,vmexec.label_array,sizeof(CodeLabel) * vme.head.code_label_count);
+        memtop += sizeof(CodeLabel) * vme.head.code_label_count;
         memcpy(memtop,vmexec.code_array,vmexec.head.code_length * sizeof(ByteCode));
         pc.offset = (ByteCode*)memtop;
         memtop += vmexec.head.code_length * sizeof(ByteCode);
@@ -338,6 +341,7 @@ class VMRuntime{
         thisTSS->fp.intc = 0;
         thisTSS->sp.intc = 0;
         thisTSS->pc.intc = pointerSubtract(memtop - (vmexec.head.code_length * sizeof(ByteCode)), malloc_place);
+        thisTSS->code_labels.intc = pointerSubtract(memtop - (vmexec.head.code_length * sizeof(ByteCode)) - (sizeof(CodeLabel) * vme.head.code_label_count), malloc_place);
         memtop += sizeof(TSS);
         
         thisTSS->vstack_start.intc = vme.cpool.size * 3 + vme.head.code_length * sizeof(ByteCode) + sizeof(TSS) - 1; // 从上往下
@@ -346,11 +350,12 @@ class VMRuntime{
         pc.task = thisTSS;
     }
     void SeekToStart(){
+        CodeLabel* label_array = (CodeLabel*)(malloc_place + thisTSS->basememory.intc + thisTSS->code_labels.intc);
         long Origin;
         for(int i = 0;i < vmexec.head.code_label_count;i++){
-            if(std::string(vmexec.label_array[i].label_n) == "_vmstart") Origin = i;
+            if(std::string(label_array[i].label_n) == "_vmstart") Origin = i;
         }
-        pc.offset = (ByteCode*)(malloc_place + thisTSS->basememory.intc + thisTSS->pc.intc + vmexec.label_array[Origin].start);
+        pc.offset = (ByteCode*)(malloc_place + thisTSS->basememory.intc + thisTSS->pc.intc + label_array[Origin].start);
     }
     void StartMainLoop(){
         SeekToStart();
@@ -426,6 +431,13 @@ class VMRuntime{
                     pc += src.intc;
                     continue;
                 }
+            }
+            if(COMMAND_MAP[pc.offset->c.intc] == "call"){
+                CodeLabel* label_array = (CodeLabel*)(malloc_place + thisTSS->basememory.intc + thisTSS->code_labels.intc);
+                Content tocall = (pc.offset+1)->c;
+                if(getAddress(*(pc.offset+1)) != nullptr) tocall = *(Content*)getAddress(*(pc.offset+1));
+                pc.offset = (ByteCode*)(malloc_place + thisTSS->basememory.intc + thisTSS->pc.intc + label_array[tocall.intc].start);
+                continue;
             }
             pc++;
         }
