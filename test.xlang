@@ -3,6 +3,8 @@ This is a test file for Xlang compiler
 Writed by xiaokang00010 at Febuary,12th,2021
 */
 // for testing
-for(int i = 0,i <= 10,i=i+1){
-	asm "add reg31,1";
+func int main(){
+	asm "mov reg0,0";
+	asm "ret [0],8";
 };
+int a = main();

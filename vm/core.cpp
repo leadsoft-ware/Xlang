@@ -109,6 +109,7 @@ struct TSS{
     Content regs[32];
     Content basememory;
     Content code_labels;
+    Content code_start;
     Content vstack_start;
     Content _AllocSize;
 };
@@ -133,12 +134,12 @@ std::string COMMAND_MAP[] = {
 class PC_Register{
     public:
     TSS* task;
-    std::string* basestr;
+    char* basestr;
     ByteCode* offset;
     long current_offset;
     PC_Register(){};
-    PC_Register(std::string& basestr,TSS* task,void* start){
-        this->basestr = &basestr;
+    PC_Register(char* basestr,TSS* task,void* start){
+        this->basestr = basestr;
         offset = (ByteCode*)start;
     }
     void updateTask(){
@@ -198,15 +199,18 @@ class vm_stack{
         this->task = task;
     }
     void push(char* data,long size){
+        std::cout << "--->" << task->fp.intc << " " << task->sp.intc << std::endl;
         task->sp.intc += size;
-        char* realaddr = basememory + task->basememory.intc + task->_AllocSize.intc - task->fp.intc - task->sp.intc;
+        char* realaddr = basememory + task->basememory.intc + task->vstack_start.intc - task->fp.intc - task->sp.intc;
+        std::cout << "---> " << pointerSubtract(realaddr,basememory) << std::endl;
         memcpy(realaddr,data,size);
+        std::cout << "--->" << task->fp.intc << " " << task->sp.intc << std::endl;
     }
     void push(Content& s){
         this->push((char*)&s.chc,8);
     }
     char* pop(long size){
-        char* ret = basememory + task->basememory.intc + task->_AllocSize.intc - task->fp.intc - task->sp.intc;
+        char* ret = basememory + task->basememory.intc + task->vstack_start.intc - task->fp.intc - task->sp.intc;
         task->sp.intc -= size;
         return ret;
     }
@@ -214,15 +218,18 @@ class vm_stack{
         return (Content*)pop(8);
     }
     void save(){
+        std::cout << "--->" << task->fp.intc << " " << task->sp.intc << std::endl;
         for(int i = 0;i < 32;i++){
             push(task->regs[i]);
         }
+        //std::cout << "--->" << task->fp.intc << " " << task->sp.intc << std::endl;
         push(task->pc);
         push((char*)&task->regflag,1);
         push(task->fp);
         push(task->sp);
         task->fp.intc += task->sp.intc;
         task->sp.intc = 0;
+        //std::cout << "--->" << task->fp.intc << " " << task->sp.intc << std::endl;
     }
     void restore(){
         pop(task->sp.intc);
@@ -323,13 +330,14 @@ class VMRuntime{
     
     VMRuntime(VMExec& vme,int fd){
         vmexec = vme;
-        malloc_place = (char*) malloc(vme.cpool.size * 3 + vme.head.code_length * sizeof(ByteCode) + sizeof(TSS) + (sizeof(CodeLabel) * vme.head.code_label_count));
+        malloc_place = (char*) malloc(vme.cpool.size * 3 + vme.head.code_length * sizeof(ByteCode) + sizeof(TSS) + (sizeof(CodeLabel) * vme.head.code_label_count) + 1024);
         char* memtop = malloc_place;
         // fill constant pool 
         memcpy(memtop,vmexec.cpool.pool,vmexec.cpool.size);
         memtop += vmexec.cpool.size;
         // rewrite CodeLabel 
-        //codelbl_addr.intc = pointerSubtract(memtop,malloc_place);
+        Content codelbl_addr;
+        codelbl_addr.intc = pointerSubtract(memtop,malloc_place);
         memcpy(memtop,vmexec.label_array,sizeof(CodeLabel) * vme.head.code_label_count);
         memtop += sizeof(CodeLabel) * vme.head.code_label_count;
         memcpy(memtop,vmexec.code_array,vmexec.head.code_length * sizeof(ByteCode));
@@ -341,13 +349,15 @@ class VMRuntime{
         thisTSS->fp.intc = 0;
         thisTSS->sp.intc = 0;
         thisTSS->pc.intc = pointerSubtract(memtop - (vmexec.head.code_length * sizeof(ByteCode)), malloc_place);
-        thisTSS->code_labels.intc = pointerSubtract(memtop - (vmexec.head.code_length * sizeof(ByteCode)) - (sizeof(CodeLabel) * vme.head.code_label_count), malloc_place);
+        thisTSS->code_start = thisTSS->pc;
+        thisTSS->code_labels = codelbl_addr;
         memtop += sizeof(TSS);
         
-        thisTSS->vstack_start.intc = vme.cpool.size * 3 + vme.head.code_length * sizeof(ByteCode) + sizeof(TSS) - 1; // 从上往下
-        Alloc_Size = vme.cpool.size * 3 + vme.head.code_length * sizeof(ByteCode) + sizeof(TSS) - 1;
+        thisTSS->vstack_start.intc = vme.cpool.size * 3 + vme.head.code_length * sizeof(ByteCode) + sizeof(TSS) + 1024 - 1; // 从上往下
+        Alloc_Size = vme.cpool.size * 3 + vme.head.code_length * sizeof(ByteCode) + sizeof(TSS)  + 1024 - 1;
         stack = vm_stack(malloc_place,thisTSS);
         pc.task = thisTSS;
+        pc.basestr = malloc_place;
     }
     void SeekToStart(){
         CodeLabel* label_array = (CodeLabel*)(malloc_place + thisTSS->basememory.intc + thisTSS->code_labels.intc);
@@ -360,7 +370,7 @@ class VMRuntime{
     void StartMainLoop(){
         SeekToStart();
         while(COMMAND_MAP[pc.offset->c.intc] != "exit"){
-            std::cout << "?" << std::endl;
+            if(COMMAND_MAP[pc.offset->c.intc] != "ret") disasm();
             if(intc.HasInterrputSignal){
             
             }
@@ -436,8 +446,19 @@ class VMRuntime{
                 CodeLabel* label_array = (CodeLabel*)(malloc_place + thisTSS->basememory.intc + thisTSS->code_labels.intc);
                 Content tocall = (pc.offset+1)->c;
                 if(getAddress(*(pc.offset+1)) != nullptr) tocall = *(Content*)getAddress(*(pc.offset+1));
-                pc.offset = (ByteCode*)(malloc_place + thisTSS->basememory.intc + thisTSS->pc.intc + label_array[tocall.intc].start);
+                pc.offset = (ByteCode*)(malloc_place + thisTSS->basememory.intc + thisTSS->code_start.intc + label_array[tocall.intc].start*sizeof(ByteCode));
+                pc.updateTask();
+                pc++;
                 continue;
+            }
+            if(COMMAND_MAP[pc.offset->c.intc] == "ret"){
+                Content size = (pc.offset+2)->c;Content s;
+                if(getAddress(*(pc.offset+2)) != nullptr) size = *(Content*)getAddress(*(pc.offset+2));
+                char* _Src = getAddress(*(pc.offset+1));
+                stack.restore();
+                pc.offset = (ByteCode*)(pc.basestr + thisTSS->pc.intc);
+                stack.push(_Src,size.intc);
+                while(COMMAND_MAP[pc.offset->c.intc] != "call") pc++;
             }
             pc++;
         }

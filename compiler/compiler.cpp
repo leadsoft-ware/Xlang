@@ -502,7 +502,7 @@ ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in g
         genCommand("mov").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("regsb").\
         genCommand("sub").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("regfp").\
         genCommand("sub").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("regsp").\
-        genCommand("add").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("1").push();
+        /*genCommand("add").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("1").*/push();
         //genCommand("add").genArg("reg" + std::to_string(getLastUsingRegId())).genArg(std::to_string(getMemberSize(ast)));  //低端序，直接从下面读到上面
         sp += getMemberSize(ast);
         return asb;

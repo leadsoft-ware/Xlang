@@ -6,56 +6,37 @@ This is a test file for Xlang compiler
 Writed by xiaokang00010 at Febuary,12th,2021
 */
 // for testing
-for(int i = 0,i <= 10,i=i+1){
-	asm "add reg31,1";
+func int main(){
+	asm "mov reg0,0";
+	asm "ret [0],8";
 };
+int a = main();
 
+--->regfp
+--->_main_int
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->regsp
+--->[0]
+--->[reg0]
+--->8
 --->reg0
 --->0
 --->[0]
---->reg0
 --->8
---->reg0
---->0
---->reg1
---->10
---->reg0
---->[reg0]
---->reg0
---->reg1
---->reg31
---->1
---->reg0
---->0
---->reg1
---->0
---->reg2
---->1
---->reg1
---->[reg1]
---->reg1
---->reg2
---->[reg0]
---->reg1
---->8
---->2
---->9
 [32m_vmstart:[0m
-mov reg0,0;
-mov_m [0],reg0,8;
-mov reg0,0;
-mov reg1,10;
-mov reg0,[reg0];
-mineq reg0,reg1;
-jt 2;
-jf 9;
-add reg31,1;
-mov reg0,0;
-mov reg1,0;
-mov reg2,1;
-mov reg1,[reg1];
-add reg1,reg2;
-mov_m [reg0],reg1,8;
-jmp -13;
+save;
+sub regfp,0;
+call _main_int;
+mov reg0,regsb;
+sub reg0,regfp;
+sub reg0,regsp;
+mov_m [0],[reg0],8;
 exit;
+[32m_main_int:[0m
+mov reg0,0;
+ret [0],8;
 
