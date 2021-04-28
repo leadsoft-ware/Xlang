@@ -4,7 +4,6 @@ Writed by xiaokang00010 at Febuary,12th,2021
 */
 // for testing
 func int main(){
-	asm "mov reg0,0";
-	asm "ret [0],8";
+	return 233;
 };
 int a = main();

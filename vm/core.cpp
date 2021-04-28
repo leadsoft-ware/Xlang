@@ -199,12 +199,12 @@ class vm_stack{
         this->task = task;
     }
     void push(char* data,long size){
-        std::cout << "--->" << task->fp.intc << " " << task->sp.intc << std::endl;
+        //std::cout << "--->" << task->fp.intc << " " << task->sp.intc << std::endl;
         task->sp.intc += size;
         char* realaddr = basememory + task->basememory.intc + task->vstack_start.intc - task->fp.intc - task->sp.intc;
-        std::cout << "---> " << pointerSubtract(realaddr,basememory) << std::endl;
+        //std::cout << "---> " << pointerSubtract(realaddr,basememory) << std::endl;
         memcpy(realaddr,data,size);
-        std::cout << "--->" << task->fp.intc << " " << task->sp.intc << std::endl;
+        //std::cout << "--->" << task->fp.intc << " " << task->sp.intc << std::endl;
     }
     void push(Content& s){
         this->push((char*)&s.chc,8);
@@ -353,8 +353,8 @@ class VMRuntime{
         thisTSS->code_labels = codelbl_addr;
         memtop += sizeof(TSS);
         
-        thisTSS->vstack_start.intc = vme.cpool.size * 3 + vme.head.code_length * sizeof(ByteCode) + sizeof(TSS) + 1024 - 1; // 从上往下
-        Alloc_Size = vme.cpool.size * 3 + vme.head.code_length * sizeof(ByteCode) + sizeof(TSS)  + 1024 - 1;
+        thisTSS->vstack_start.intc = vme.cpool.size * 3 + vme.head.code_length * sizeof(ByteCode) + sizeof(TSS) + (sizeof(CodeLabel) * vme.head.code_label_count) + 1024 - 1;
+        Alloc_Size = vme.cpool.size * 3 + vme.head.code_length * sizeof(ByteCode) + sizeof(TSS) + (sizeof(CodeLabel) * vme.head.code_label_count) + 1024 - 1;
         stack = vm_stack(malloc_place,thisTSS);
         pc.task = thisTSS;
         pc.basestr = malloc_place;
@@ -448,7 +448,6 @@ class VMRuntime{
                 if(getAddress(*(pc.offset+1)) != nullptr) tocall = *(Content*)getAddress(*(pc.offset+1));
                 pc.offset = (ByteCode*)(malloc_place + thisTSS->basememory.intc + thisTSS->code_start.intc + label_array[tocall.intc].start*sizeof(ByteCode));
                 pc.updateTask();
-                pc++;
                 continue;
             }
             if(COMMAND_MAP[pc.offset->c.intc] == "ret"){

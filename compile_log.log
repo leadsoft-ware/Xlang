@@ -7,8 +7,7 @@ Writed by xiaokang00010 at Febuary,12th,2021
 */
 // for testing
 func int main(){
-	asm "mov reg0,0";
-	asm "ret [0],8";
+	return 233;
 };
 int a = main();
 
@@ -24,8 +23,14 @@ int a = main();
 --->[reg0]
 --->8
 --->reg0
---->0
---->[0]
+--->233
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->regsp
+--->[reg0]
 --->8
 [32m_vmstart:[0m
 save;
@@ -37,6 +42,10 @@ sub reg0,regsp;
 mov_m [0],[reg0],8;
 exit;
 [32m_main_int:[0m
-mov reg0,0;
-ret [0],8;
+mov reg0,233;
+push reg0,8;
+mov reg0,regsb;
+sub reg0,regfp;
+sub reg0,regsp;
+ret [reg0],8;
 
