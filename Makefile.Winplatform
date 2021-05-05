@@ -1,6 +1,6 @@
 # Makefile for Xlang compiler and Xtime VM
 CXX := g++ # for my mac, you can set it to g++
-CXXFLAGS = -std=c++2a -g 
+CXXFLAGS = -g 
 
 compiler: 
 	$(CXX) xlang.cpp -o xlang $(CXXFLAGS)
