@@ -1,16 +1,15 @@
-name: Auto Build
+name: Build
 on: [push]
 jobs:
-  Explore-GitHub-Actions:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - run: apt install g++-10
-      - run: cd ${{ github.workspace }} && make xl && make debug_release
-      - name: Check out repository code
-        uses: actions/checkout@v2
-      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
-      - run: echo "🖥️ The workflow is now ready to test your code on the runner."
-      - name: List files in the repository
-        run: |
-          ls ${{ github.workspace }}
-      - run: echo "🍏 This job's status is ${{ job.status }}."
+    - uses: kurocha/setup-cpp@v1
+    - name: Pack
+      run: |
+       cd ${{ github.workspace }} && make xl && make xlang
+       cd ${{ github.workspace }} && tar -cvf build-linux.zip ./xl ./vm/vm 
+    - uses: actions/upload-artifact@v2
+      with:
+        name: Upload
+        path: ${{ github.workspace }}/build-linux.zip
