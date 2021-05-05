@@ -8,8 +8,8 @@ jobs:
     - name: Pack
       run: |
        cd ${{ github.workspace }} && git clone https://github.com/leadsoft-ware/Xlang
-       cd ${{ github.workspace }} && make xl && make xlang
-       cd ${{ github.workspace }} && tar -cvf build-linux.zip ./xl ./vm/vm 
+       cd ${{ github.workspace }}/Xlang && make xl && make xlang
+       cd ${{ github.workspace }} && tar -cvf build-linux.zip ./Xlang/xl ./Xlang/vm/vm 
     - uses: actions/upload-artifact@v2
       with:
         name: Upload
