@@ -9,8 +9,8 @@ jobs:
       run: |
        cd ${{ github.workspace }} && git clone https://github.com/leadsoft-ware/Xlang
        cd ${{ github.workspace }}/Xlang && make xl && make debug_release
-       cd ${{ github.workspace }} && tar -cvf build-linux.zip ./Xlang/xl ./Xlang/vm/vm 
+       cd ${{ github.workspace }} && tar -cvf build-linux.tar ./Xlang/xl ./Xlang/vm/vm 
     - uses: actions/upload-artifact@v2
       with:
         name: Upload
-        path: ${{ github.workspace }}/build-linux.zip
+        path: ${{ github.workspace }}/build-linux.tar
