@@ -8,7 +8,7 @@ jobs:
       run: |
        cd ${{ github.workspace }} && git clone https://github.com/leadsoft-ware/Xlang
        cd ${{ github.workspace }}/Xlang && make -f Makefile.Winplatform xl && make -f Makefile.Winplatform debug_release
-       cd ${{ github.workspace }} && tar -cvf build-windows.tar ./Xlang/xl ./Xlang/vm/vm 
+       cd ${{ github.workspace }} && tar -cvf build-windows.tar ./Xlang/xl.exe ./Xlang/vm/vm.exe
     - uses: actions/upload-artifact@v2
       with:
         name: Upload
