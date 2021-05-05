@@ -6,3 +6,5 @@
 #define __VM_CODENAME  "CLANNAD"
 #define __VM_VERSION   "Alpha"
 #define __VM_BUILD     1
+
+#define __VM_ENABLE_BACKTRACE

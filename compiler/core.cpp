@@ -532,6 +532,7 @@ namespace ASTree_APIs{
             }
             return false;
         }
+        // 获取当前函数在哪一个结构体
         std::string getFunctionPath(ASTree ast){
             if(ast.nodeT == FunctionCallStatement) return "";
             if(ast.nodeT == Id) return ast.this_node.str;

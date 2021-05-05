@@ -6,12 +6,15 @@ This is a test file for Xlang compiler
 Writed by xiaokang00010 at Febuary,12th,2021
 */
 // for testing
-func int main(){
-	return 233;
+func int main(int:a){
+	return a;
 };
-int a = main();
+int f = main(233);
 
---->regfp
+--->reg0
+--->233
+--->reg0
+--->8
 --->_main_int
 --->reg0
 --->regsb
@@ -23,18 +26,17 @@ int a = main();
 --->[reg0]
 --->8
 --->reg0
---->233
---->reg0
 --->regsb
 --->reg0
 --->regfp
 --->reg0
---->regsp
+--->8
 --->[reg0]
 --->8
 [32m_vmstart:[0m
 save;
-sub regfp,0;
+mov reg0,233;
+push reg0,8;
 call _main_int;
 mov reg0,regsb;
 sub reg0,regfp;
@@ -42,10 +44,8 @@ sub reg0,regsp;
 mov_m [0],[reg0],8;
 exit;
 [32m_main_int:[0m
-mov reg0,233;
-push reg0,8;
 mov reg0,regsb;
 sub reg0,regfp;
-sub reg0,regsp;
+sub reg0,8;
 ret [reg0],8;
 

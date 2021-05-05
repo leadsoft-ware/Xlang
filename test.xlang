@@ -3,7 +3,7 @@ This is a test file for Xlang compiler
 Writed by xiaokang00010 at Febuary,12th,2021
 */
 // for testing
-func int main(){
-	return 233;
+func int main(int:a){
+	return a;
 };
-int a = main();
+int f = main(233);

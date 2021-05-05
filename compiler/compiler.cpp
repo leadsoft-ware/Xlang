@@ -1,6 +1,6 @@
 #include "core.cpp"
 #include "../vm/core.cpp"
-//#define __DONT_CATCH_ERROR 
+#define __DONT_CATCH_ERROR 
 
 std::string& replace_all(std::string& str,const std::string& old_value,const std::string& new_value)     
 {     
@@ -481,6 +481,7 @@ ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in g
         if(ast.this_node.type == TOK_DOT){
             ASTree fullname(Lexer(ASTree_APIs::MemberExpression::getFunctionPath(ast)));
             asb += dumpToAsm(fullname); // 结构体传址
+            if(symbol_table.find(fullname.node[0].this_node.str) != symbol_table.end()) asb.genCommand("sub").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("281"); // 281 MEANS STACK REGS , REGFLAG USED MEMORY
             asb.genCommand("push").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("8");
         }
         if(args.nodeT == Args){
@@ -489,22 +490,22 @@ ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in g
             for(int i = 0;i < args.node.size();i++){ 
                 asb += dumpToAsm(args.node[i]);
                 std::string realarg0 = "reg" + std::to_string(getLastUsingRegId());
-                //std::cout << "BUGHERE:" << AST_nodeType[ast.node[i].node[0].nodeT] <<  std::endl;
                 if(args.node[i].this_node.type == TOK_INTEGER || args.node[i].this_node.type == TOK_DOUBLE || args.node[i].this_node.type == TOK_CHARTER || args.node[i].this_node.type == TOK_STRING || (args.node[i].nodeT == ExpressionStatement && args.node[i].this_node.type != TOK_DOT)) /*do nothing*/;
                 else realarg0 = "[" + realarg0 + "]";
+                if(
+                    !(args.node[i].this_node.type == TOK_INTEGER || args.node[i].this_node.type == TOK_DOUBLE || args.node[i].this_node.type == TOK_CHARTER || args.node[i].this_node.type == TOK_STRING || (args.node[i].nodeT == ExpressionStatement && args.node[i].this_node.type != TOK_DOT)) &&
+                    symbol_table.find(((args.node[i].this_node.type == TOK_DOT) ? args.node[i].node[0].this_node.str : args.node[i].this_node.str)) != symbol_table.end()
+                ) asb.genCommand("sub").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("281"); // SAME
                 asb.genCommand("push").genArg(realarg0).genArg(std::to_string(getMemberSize(args.node[i]))).push();
-                total_size += getMemberSize(args.node[i]);
             }
         }
-        asb.genCommand("sub").genArg("regfp").genNumArg(total_size).push();
-        //std::cout << "\033[32mGuess Result:\033[0m" << guessType(ast) << " " << getFunctionRealName(ast) <<  std::endl;
         asb.genCommand("call").genArg(funcnameInTab(func_name)).\
         genCommand("mov").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("regsb").\
         genCommand("sub").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("regfp").\
         genCommand("sub").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("regsp").\
         /*genCommand("add").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("1").*/push();
         //genCommand("add").genArg("reg" + std::to_string(getLastUsingRegId())).genArg(std::to_string(getMemberSize(ast)));  //低端序，直接从下面读到上面
-        sp += getMemberSize(ast);
+        //sp += getMemberSize(ast);
         return asb;
     }
     if(ast.nodeT == Args && (ast.this_node.type == TOK_PTRB || ast.this_node.type == TOK_ADDRBLOCK)){
@@ -533,12 +534,12 @@ ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in g
             RegState[getLastUsingRegId()] = true;
             ab += dumpToAsm(ast.node[1],mode);
             if(ast.node[1].this_node.type == TOK_PTRID || ast.node[1].this_node.type == TOK_PTRB || (guessType(ast.node[1]) == "char" && ast.node[1].this_node.type != TOK_CHARTER)) ab.genCommand("push1b").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("[reg" + std::to_string(getLastUsingRegId()) + "]").push();
-            if(ast.node[1].nodeT == FunctionCallStatement || ASTree_APIs::MemberExpression::hasFunctionCallStatement(ast.node[1])) sp -= getMemberSize(ast.node[1]);
+            if(ast.node[1].nodeT == FunctionCallStatement || ASTree_APIs::MemberExpression::hasFunctionCallStatement(ast.node[1])) ;//sp -= getMemberSize(ast.node[1]);
             RegState[getLastUsingRegId()] = true;
             if(isNormalExpression(ast.node[0]) || (getMemberSize(ast.node[0]) == 1)) /*由于这是常量或者已经删除其他元素的char，不需要再将值压入寄存器*/;
             else if(ASTree_APIs::MemberExpression::hasFunctionCallStatement(ast.node[0])){
                 ab.genCommand("mov").genArg("reg" + std::to_string(getLastUsingRegId() - 2)).genArg("[reg" + std::to_string(getLastUsingRegId() - 2) + "]").push();
-                sp -= getMemberSize(ast.node[0]);
+                //sp -= getMemberSize(ast.node[0]);
             }
             else if(getMemberSize(ast.node[0]) == 8 && IsTakeAddressStatement(ast.node[0])) ab.genCommand("mov").genArg("reg" + std::to_string(getLastUsingRegId() - 2)).genArg("[reg" + std::to_string(getLastUsingRegId() - 2) + "]").push();
             else throw CompileError("TypeError: 加减乘除以及逻辑运算仅限于基础类型,除非你想让虚拟机崩掉.\nBasic operator and boolean expression only support basic types,if you want to let the vm crash then don't do it.");

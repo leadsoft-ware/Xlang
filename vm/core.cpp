@@ -94,6 +94,10 @@ int LoadVMExec(char* filename,VMExec& vme){
     return fd;
 }
 
+#ifdef __VM_ENABLE_BACKTRACE
+std::vector<std::string> track;
+#endif
+
 struct heap_item_t{
     addr_t c[3];
     addr_t& operator[](int index){
@@ -227,9 +231,9 @@ class vm_stack{
         push((char*)&task->regflag,1);
         push(task->fp);
         push(task->sp);
+        std::cout << "--->" << task->fp.intc << " " << task->sp.intc << std::endl;
         task->fp.intc += task->sp.intc;
         task->sp.intc = 0;
-        //std::cout << "--->" << task->fp.intc << " " << task->sp.intc << std::endl;
     }
     void restore(){
         pop(task->sp.intc);
@@ -443,14 +447,23 @@ class VMRuntime{
                 }
             }
             if(COMMAND_MAP[pc.offset->c.intc] == "call"){
+                
                 CodeLabel* label_array = (CodeLabel*)(malloc_place + thisTSS->basememory.intc + thisTSS->code_labels.intc);
                 Content tocall = (pc.offset+1)->c;
                 if(getAddress(*(pc.offset+1)) != nullptr) tocall = *(Content*)getAddress(*(pc.offset+1));
+                #ifdef __VM_ENABLE_BACKTRACE
+                std::cout << track.size() << ":" << label_array[tocall.intc].label_n << std::endl;
+                track.push_back(label_array[tocall.intc].label_n);
+                #endif
                 pc.offset = (ByteCode*)(malloc_place + thisTSS->basememory.intc + thisTSS->code_start.intc + label_array[tocall.intc].start*sizeof(ByteCode));
                 pc.updateTask();
                 continue;
             }
             if(COMMAND_MAP[pc.offset->c.intc] == "ret"){
+                #ifdef __VM_ENABLE_BACKTRACE
+                std::cout << "leave:" << track[track.size()-1] << std::endl;
+                track.erase(track.end()--);
+                #endif
                 Content size = (pc.offset+2)->c;Content s;
                 if(getAddress(*(pc.offset+2)) != nullptr) size = *(Content*)getAddress(*(pc.offset+2));
                 char* _Src = getAddress(*(pc.offset+1));
