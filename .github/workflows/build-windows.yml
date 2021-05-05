@@ -4,13 +4,12 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
-    - uses: kurocha/setup-cpp@v1
     - name: Pack
       run: |
        cd ${{ github.workspace }} && git clone https://github.com/leadsoft-ware/Xlang
-       cd ${{ github.workspace }}/Xlang && make xl && make debug_release
-       cd ${{ github.workspace }} && tar -cvf build-linux.tar ./Xlang/xl ./Xlang/vm/vm 
+       cd ${{ github.workspace }}/Xlang && make -f Makefile.Winplatform xl && make -f Makefile.Winplatform debug_release
+       cd ${{ github.workspace }} && tar -cvf build-windows.tar ./Xlang/xl ./Xlang/vm/vm 
     - uses: actions/upload-artifact@v2
       with:
         name: Upload
-        path: ${{ github.workspace }}/Xlang/xl ${{ github.workspace }}/Xlang/vm/vm 
+        path: build-windows.tar
