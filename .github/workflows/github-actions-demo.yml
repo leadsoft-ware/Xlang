@@ -7,7 +7,9 @@ jobs:
     - uses: kurocha/setup-cpp@v1
     - name: Pack
       run: |
-       ls ${{ github.workspace }}
+       cd ${{ github.workspace }} && git clone https://github.com/leadsoft-ware/Xlang
+       cd ${{ github.workspace }} && make xl && make xlang
+       cd ${{ github.workspace }} && tar -cvf build-linux.zip ./xl ./vm/vm 
     - uses: actions/upload-artifact@v2
       with:
         name: Upload
