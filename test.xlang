@@ -3,7 +3,12 @@ This is a test file for Xlang compiler
 Writed by xiaokang00010 at Febuary,12th,2021
 */
 // for testing
+func int test(int:a){
+	return a+1;
+};
+
 func int main(int:a){
-	return a;
+	int ret = test(a);
+	return ret;
 };
 int f = main(233);

@@ -477,7 +477,7 @@ class VMRuntime{
     }
     void Run(){
         if(vm_rules["verbose"] == true){
-            std::cout << "Xlang " << __VM_VERSION << " Build:" << __VM_BUILD << " Codename:" << __VM_CODENAME << std::endl;
+            std::cout << "Xlang " << __VM_VERSION << " Build:" << __VM_COMMIT << " Codename:" << __VM_CODENAME << std::endl;
         }
         StartMainLoop();
     }

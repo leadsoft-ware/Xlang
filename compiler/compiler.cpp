@@ -481,7 +481,7 @@ ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in g
         if(ast.this_node.type == TOK_DOT){
             ASTree fullname(Lexer(ASTree_APIs::MemberExpression::getFunctionPath(ast)));
             asb += dumpToAsm(fullname); // 结构体传址
-            if(symbol_table.find(fullname.node[0].this_node.str) != symbol_table.end()) asb.genCommand("sub").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("281"); // 281 MEANS STACK REGS , REGFLAG USED MEMORY
+            if(symbol_table.find(fullname.node[0].this_node.str) != symbol_table.end()) asb.genCommand("add").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("281"); // 281 MEANS STACK REGS , REGFLAG USED MEMORY
             asb.genCommand("push").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("8");
         }
         if(args.nodeT == Args){
@@ -495,7 +495,7 @@ ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in g
                 if(
                     !(args.node[i].this_node.type == TOK_INTEGER || args.node[i].this_node.type == TOK_DOUBLE || args.node[i].this_node.type == TOK_CHARTER || args.node[i].this_node.type == TOK_STRING || (args.node[i].nodeT == ExpressionStatement && args.node[i].this_node.type != TOK_DOT)) &&
                     symbol_table.find(((args.node[i].this_node.type == TOK_DOT) ? args.node[i].node[0].this_node.str : args.node[i].this_node.str)) != symbol_table.end()
-                ) asb.genCommand("sub").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("281"); // SAME
+                ) asb.genCommand("add").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("281"); // SAME
                 asb.genCommand("push").genArg(realarg0).genArg(std::to_string(getMemberSize(args.node[i]))).push();
             }
         }

@@ -6,8 +6,13 @@ This is a test file for Xlang compiler
 Writed by xiaokang00010 at Febuary,12th,2021
 */
 // for testing
+func int test(int:a){
+	return a+1;
+};
+
 func int main(int:a){
-	return a;
+	int ret = test(a);
+	return ret;
 };
 int f = main(233);
 
@@ -31,6 +36,45 @@ int f = main(233);
 --->regfp
 --->reg0
 --->8
+--->reg0
+--->281
+--->[reg0]
+--->8
+--->_test_int
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->regsp
+--->[reg0]
+--->8
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->16
+--->[reg0]
+--->8
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->8
+--->reg1
+--->1
+--->reg0
+--->[reg0]
+--->reg0
+--->reg1
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->regsp
 --->[reg0]
 --->8
 [32m_vmstart:[0m
@@ -44,8 +88,31 @@ sub reg0,regsp;
 mov_m [0],[reg0],8;
 exit;
 [32m_main_int:[0m
+save;
 mov reg0,regsb;
 sub reg0,regfp;
 sub reg0,8;
+add reg0,281;
+push [reg0],8;
+call _test_int;
+mov reg0,regsb;
+sub reg0,regfp;
+sub reg0,regsp;
+push [reg0],8;
+mov reg0,regsb;
+sub reg0,regfp;
+sub reg0,16;
+ret [reg0],8;
+[32m_test_int:[0m
+mov reg0,regsb;
+sub reg0,regfp;
+sub reg0,8;
+mov reg1,1;
+mov reg0,[reg0];
+add reg0,reg1;
+push reg0,8;
+mov reg0,regsb;
+sub reg0,regfp;
+sub reg0,regsp;
 ret [reg0],8;
 
