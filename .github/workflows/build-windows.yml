@@ -1,0 +1,16 @@
+name: Build
+on: [push]
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+    - uses: kurocha/setup-cpp@v1
+    - name: Pack
+      run: |
+       cd ${{ github.workspace }} && git clone https://github.com/leadsoft-ware/Xlang
+       cd ${{ github.workspace }}/Xlang && make xl && make debug_release
+       cd ${{ github.workspace }} && tar -cvf build-linux.tar ./Xlang/xl ./Xlang/vm/vm 
+    - uses: actions/upload-artifact@v2
+      with:
+        name: Upload
+        path: ${{ github.workspace }}/Xlang/xl ${{ github.workspace }}/Xlang/vm/vm 
