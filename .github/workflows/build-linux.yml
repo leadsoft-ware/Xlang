@@ -1,4 +1,4 @@
-name: Build
+name: Build-Linux
 on: [push]
 jobs:
   build:
@@ -12,5 +12,5 @@ jobs:
        cd ${{ github.workspace }} && tar -cvf build-linux.tar ./Xlang/xl ./Xlang/vm/vm 
     - uses: actions/upload-artifact@v2
       with:
-        name: Upload
+        name: build-linux
         path: ${{ github.workspace }}/build-linux.tar
