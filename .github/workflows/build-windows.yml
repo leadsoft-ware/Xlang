@@ -1,4 +1,4 @@
-name: Build
+name: Build-Windows
 on: [push]
 jobs:
   build:
@@ -11,5 +11,5 @@ jobs:
        cd ${{ github.workspace }} && tar -cvf build-windows.tar ./Xlang/xl.exe ./Xlang/vm/vm.exe
     - uses: actions/upload-artifact@v2
       with:
-        name: Upload
+        name: windows-build
         path: build-windows.tar
