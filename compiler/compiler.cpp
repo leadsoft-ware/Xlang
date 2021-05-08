@@ -291,7 +291,7 @@ ASTree getFunctionCallArgs(ASTree ast){
 
 std::string funcnameInTab(std::string realname){
     for(auto i = function_table.begin();i != function_table.end();i++){
-        if(i->first.substr(0,realname.length()) == realname) return i->first;
+        if(i->first.substr(0,realname.length()+1) == realname + "_") return i->first;
     }
     throw CompileError("Cannot find current overload in function table");
 }
@@ -480,7 +480,6 @@ ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in g
         std::string func_name = getFunctionRealName(ast);
         ASTree args = getFunctionCallArgs(ast);
         ASMBlock asb;
-        long total_size = 0;
         asb.genCommand("save").push();
         if(ast.this_node.type == TOK_DOT){
             ASTree fullname(Lexer(ASTree_APIs::MemberExpression::getFunctionPath(ast)));
@@ -502,7 +501,7 @@ ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in g
         genCommand("mov").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("regsb").\
         genCommand("sub").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("regfp").\
         genCommand("sub").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("regsp").\
-        /*genCommand("add").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("1").*/push();
+        genCommand("sub").genArg("regsp").genArg(std::to_string(getMemberSize(ast))).push(); // 把函数压入栈的元素减掉
         //genCommand("add").genArg("reg" + std::to_string(getLastUsingRegId())).genArg(std::to_string(getMemberSize(ast)));  //低端序，直接从下面读到上面
         //sp += getMemberSize(ast);
         return asb;
@@ -533,7 +532,7 @@ ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in g
             RegState[getLastUsingRegId()] = true;
             ab += dumpToAsm(ast.node[1],mode);
             if(ast.node[1].this_node.type == TOK_PTRID || ast.node[1].this_node.type == TOK_PTRB || (guessType(ast.node[1]) == "char" && ast.node[1].this_node.type != TOK_CHARTER)) ab.genCommand("push1b").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("[reg" + std::to_string(getLastUsingRegId()) + "]").push();
-            if(ast.node[1].nodeT == FunctionCallStatement || ASTree_APIs::MemberExpression::hasFunctionCallStatement(ast.node[1])) ;//sp -= getMemberSize(ast.node[1]);
+            //if(ast.node[1].nodeT == FunctionCallStatement || ASTree_APIs::MemberExpression::hasFunctionCallStatement(ast.node[1])) ;//sp -= getMemberSize(ast.node[1]);
             RegState[getLastUsingRegId()] = true;
             if(isNormalExpression(ast.node[0]) || (getMemberSize(ast.node[0]) == 1)) /*由于这是常量或者已经删除其他元素的char，不需要再将值压入寄存器*/;
             else if(ASTree_APIs::MemberExpression::hasFunctionCallStatement(ast.node[0])){
@@ -864,12 +863,15 @@ ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in g
         if(ast.this_node.str == "return"){
             ASMBlock asb;
             asb += dumpToAsm(ast.node[0]);
+            // 变量直接有地址，不用处理
             std::string realarg0 = "[reg" + std::to_string(getLastUsingRegId()) + "]";
             if(ast.node[0].this_node.type == TOK_INTEGER || ast.node[0].this_node.type == TOK_ADDRBLOCK || ast.node[0].this_node.type == TOK_DOUBLE || ast.node[0].this_node.type == TOK_CHARTER || ast.node[0].this_node.type == TOK_STRING || (ast.node[0].nodeT == ExpressionStatement && ast.node[0].this_node.type != TOK_DOT)) {
+                // 处理常量
                 asb.genCommand("push").genRegArg(getLastUsingRegId()).genNumArg(8).push();
                 asb.genCommand("mov").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("regsb").\
                 genCommand("sub").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("regfp").\
-                genCommand("sub").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("regsp").push();
+                genCommand("sub").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("regsp").\
+                push();
             }
             return asb.genCommand("ret").genArg(realarg0).genArg(std::to_string(getMemberSize(ast.node[0])))/*.genCommand("push").genArg(realarg0).genArg(std::to_string(getMemberSize(ast.node[0])))*/.push();
         }

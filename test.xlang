@@ -5,11 +5,13 @@ Writed by xiaokang00010 at Febuary,12th,2021
 // for testing
 func int test(int:t){
     if(t == 1){return 1;};
-    // found one bug on 'int ret = test(t-1) + t;'
-    // still cannot fixed in this version
-    int ret = test(t-1);
-    ret = ret + t;
+    int ret = test(t-1) + t;
     return ret;
 };
 
-int f = test(10);
+func int test2(int:t){
+    int ret = test(10) + t;
+    return ret;
+};
+
+int f = test2(10);
