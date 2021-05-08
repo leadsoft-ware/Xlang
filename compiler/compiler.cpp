@@ -106,7 +106,7 @@ std::string guessType(ASTree ast);
 enum dumpToAsmState{
     CaseMode,
     GlobalMode,
-    LoopMode,
+    ArgumentsProcessMode,
 };
 
 class CompileError{
@@ -462,7 +462,11 @@ ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in g
             return ASMBlock().genCommand("mov").genArg("reg" + std::to_string(getLastUsingRegId())).genArg(std::to_string((int)ast.this_node.str[0])).genCommand("push1b").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("reg" + std::to_string(getLastUsingRegId())).push();
         }
         if(symbol_table.find(ast.this_node.str) != symbol_table.end()){
-            if(ast.this_node.type != TOK_PTRID || (ast.this_node.type == TOK_DOT && ast.node[0].this_node.type != TOK_PTRID)) return ASMBlock().genCommand("mov").genArg("reg"+std::to_string(getLastUsingRegId())).genArg("regsb").genCommand("sub").genArg("reg"+std::to_string(getLastUsingRegId())).genArg("regfp").genCommand("sub").genArg("reg" + std::to_string(getLastUsingRegId())).genArg(std::to_string(symbol_table[ast.this_node.str].frame_position + getMemberSize(ast))).push();
+            if(ast.this_node.type != TOK_PTRID || (ast.this_node.type == TOK_DOT && ast.node[0].this_node.type != TOK_PTRID)){
+                ASMBlock ret = ASMBlock().genCommand("mov").genArg("reg"+std::to_string(getLastUsingRegId())).genArg("regsb").genCommand("sub").genArg("reg"+std::to_string(getLastUsingRegId())).genArg("regfp").genCommand("sub").genArg("reg" + std::to_string(getLastUsingRegId())).genArg(std::to_string(symbol_table[ast.this_node.str].frame_position + getMemberSize(ast))).push();
+                if(mode == ArgumentsProcessMode) ret.genCommand("add").genArg("reg" + std::to_string(getLastUsingRegId())).genNumArg(289).push();
+                return ret;
+            }
             else return ASMBlock().genCommand("mov").genArg("reg"+std::to_string(getLastUsingRegId()+1)).genArg("regsb").genCommand("sub").genArg("reg"+std::to_string(getLastUsingRegId()+1)).genArg("regfp").genCommand("sub").genArg("reg" + std::to_string(getLastUsingRegId()+1)).genArg(std::to_string(symbol_table[ast.this_node.str].frame_position + getMemberSize(ast))).genCommand("mov").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("[reg" + std::to_string(getLastUsingRegId()+1) + "]").push();
         }
         if(global_symbol_table.find(ast.this_node.str) != global_symbol_table.end()){
@@ -480,22 +484,17 @@ ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in g
         asb.genCommand("save").push();
         if(ast.this_node.type == TOK_DOT){
             ASTree fullname(Lexer(ASTree_APIs::MemberExpression::getFunctionPath(ast)));
-            asb += dumpToAsm(fullname); // 结构体传址
-            if(symbol_table.find(fullname.node[0].this_node.str) != symbol_table.end()) asb.genCommand("add").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("281"); // 281 MEANS STACK REGS , REGFLAG USED MEMORY
+            asb += dumpToAsm(fullname,ArgumentsProcessMode); // 结构体传址
             asb.genCommand("push").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("8");
         }
         if(args.nodeT == Args){
             ASTree type_a_names = function_table[funcnameInTab(func_name)].type_and_args;
             if((ast.this_node.type != TOK_DOT && args.node.size() != type_a_names.node.size()) || (ast.this_node.type == TOK_DOT && args.node.size()+1 != type_a_names.node.size())) throw CompileError("Too few/much args have been gave.");
             for(int i = 0;i < args.node.size();i++){ 
-                asb += dumpToAsm(args.node[i]);
+                asb += dumpToAsm(args.node[i],ArgumentsProcessMode);
                 std::string realarg0 = "reg" + std::to_string(getLastUsingRegId());
                 if(args.node[i].this_node.type == TOK_INTEGER || args.node[i].this_node.type == TOK_DOUBLE || args.node[i].this_node.type == TOK_CHARTER || args.node[i].this_node.type == TOK_STRING || (args.node[i].nodeT == ExpressionStatement && args.node[i].this_node.type != TOK_DOT)) /*do nothing*/;
                 else realarg0 = "[" + realarg0 + "]";
-                if(
-                    !(args.node[i].this_node.type == TOK_INTEGER || args.node[i].this_node.type == TOK_DOUBLE || args.node[i].this_node.type == TOK_CHARTER || args.node[i].this_node.type == TOK_STRING || (args.node[i].nodeT == ExpressionStatement && args.node[i].this_node.type != TOK_DOT)) &&
-                    symbol_table.find(((args.node[i].this_node.type == TOK_DOT) ? args.node[i].node[0].this_node.str : args.node[i].this_node.str)) != symbol_table.end()
-                ) asb.genCommand("add").genArg("reg" + std::to_string(getLastUsingRegId())).genArg("281"); // SAME
                 asb.genCommand("push").genArg(realarg0).genArg(std::to_string(getMemberSize(args.node[i]))).push();
             }
         }
@@ -541,12 +540,18 @@ ASMBlock dumpToAsm(ASTree ast,int mode = false/*default is cast mode(0),but in g
                 ab.genCommand("mov").genArg("reg" + std::to_string(getLastUsingRegId() - 2)).genArg("[reg" + std::to_string(getLastUsingRegId() - 2) + "]").push();
                 //sp -= getMemberSize(ast.node[0]);
             }
-            else if(getMemberSize(ast.node[0]) == 8 && IsTakeAddressStatement(ast.node[0])) ab.genCommand("mov").genArg("reg" + std::to_string(getLastUsingRegId() - 2)).genArg("[reg" + std::to_string(getLastUsingRegId() - 2) + "]").push();
+            else if(getMemberSize(ast.node[0]) == 8 && IsTakeAddressStatement(ast.node[0])) {
+                //if(symbol_table.find(ast.node[0].this_node.str) != symbol_table.end() && mode == ArgumentsProcessMode) ab.genCommand("add").genArg("reg" + std::to_string(getLastUsingRegId() - 2)).genNumArg(289).push();
+                ab.genCommand("mov").genArg("reg" + std::to_string(getLastUsingRegId() - 2)).genArg("[reg" + std::to_string(getLastUsingRegId() - 2) + "]").push();
+            }
             else throw CompileError("TypeError: 加减乘除以及逻辑运算仅限于基础类型,除非你想让虚拟机崩掉.\nBasic operator and boolean expression only support basic types,if you want to let the vm crash then don't do it.");
             //if(ast.node[1].this_node.type == TOK_PTRID || ast.node[1].this_node.type == TOK_PTRB) ab.genArg("[reg" + std::to_string(getLastUsingRegId() - 2) + "]");
             if(isNormalExpression(ast.node[1]) || (getMemberSize(ast.node[1]) == 1)) /*同上*/;
             else if(ASTree_APIs::MemberExpression::hasFunctionCallStatement(ast.node[1])) ab.genCommand("mov").genArg("reg" + std::to_string(getLastUsingRegId() - 1)).genArg("[reg" + std::to_string(getLastUsingRegId() - 1) + "]").push();
-            else if(getMemberSize(ast.node[0]) == 8 && IsTakeAddressStatement(ast.node[0])) ab.genCommand("mov").genArg("reg" + std::to_string(getLastUsingRegId() - 1)).genArg("[reg" + std::to_string(getLastUsingRegId() - 1) + "]").push();
+            else if(getMemberSize(ast.node[1]) == 8 && IsTakeAddressStatement(ast.node[1])) {
+                //if(symbol_table.find(ast.node[1].this_node.str) != symbol_table.end() && mode == ArgumentsProcessMode) ab.genCommand("add").genArg("reg" + std::to_string(getLastUsingRegId() - 1)).genNumArg(289).push();
+                ab.genCommand("mov").genArg("reg" + std::to_string(getLastUsingRegId() - 1)).genArg("[reg" + std::to_string(getLastUsingRegId() - 1) + "]").push();
+            }
             else throw CompileError("TypeError: 加减乘除以及逻辑运算仅限于基础类型,除非你想让虚拟机崩掉.\nBasic operator and boolean expression only support basic types,if you want to let the vm crash then don't do it.");
 
             if(ast.this_node.type == TOK_PLUS) ab.genCommand("add");

@@ -3,12 +3,13 @@ This is a test file for Xlang compiler
 Writed by xiaokang00010 at Febuary,12th,2021
 */
 // for testing
-func int test(int:a){
-	return a+1;
+func int test(int:t){
+    if(t == 1){return 1;};
+    // found one bug on 'int ret = test(t-1) + t;'
+    // still cannot fixed in this version
+    int ret = test(t-1);
+    ret = ret + t;
+    return ret;
 };
 
-func int main(int:a){
-	int ret = test(a);
-	return ret;
-};
-int f = main(233);
+int f = test(10);

@@ -1,6 +1,8 @@
-#include "core.cpp"
 #include "../compiler/core.cpp"
+#include "core.cpp"
 //#define __DEBUG_DISASM
+
+
 
 int main(int argc,char** argv){
     std::string path = "test.xvm";

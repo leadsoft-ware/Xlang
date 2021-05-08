@@ -8,3 +8,4 @@
 #define __VM_COMMIT    180
 
 #define __VM_ENABLE_BACKTRACE
+//#define __VM_ENABLE_LINEDEBUGGER

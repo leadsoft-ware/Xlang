@@ -3,6 +3,7 @@
   git config --global user.name "Xlang_Xiaokang00010"
 */
 #pragma once
+
 #include <iostream>
 #include <bits/stdc++.h>
 #include <unistd.h>
@@ -150,7 +151,7 @@ class PC_Register{
         task->pc.intc = pointerSubtract(offset,basestr);
     }
     void operator++(int x){
-        std::cout << "operator execed: ++" << std::endl;
+        //std::cout << "operator execed: ++" << std::endl;
         while(true){
             offset++;
             if(offset->opid == Command) break;
@@ -288,7 +289,6 @@ struct device_host{
 
 
 device_host devhost;
-
 class VMRuntime{
     public:
     long Alloc_Size;
@@ -302,6 +302,23 @@ class VMRuntime{
     bool    regflag;
     char* malloc_place;
     TSS* thisTSS;
+
+    void DebugOutput(std::ostream &out = std::cout){
+        out << "==========================[Debug Output]==========================\n";
+        for(int i = 0;i < 32;i=i+1){
+            if(i < 10) out << "reg" << i << " : " << thisTSS->regs[i].intc << " ";
+            else out << "reg" << i << ": " << thisTSS->regs[i].intc << " ";
+            if(i % 7 == 0 && i != 0) out <<  std::endl; 
+        }
+        out << "\n";
+        out << "REGFLAG:" << thisTSS->regflag << " PC:" << thisTSS->pc.intc <<  std::endl;
+        out << "==========================[EndOf Output]==========================\n";
+    }
+
+    void Memory_Watcher(long v,std::ostream &out = std::cout){
+        Content *c = (Content*)(&(malloc_place + thisTSS->basememory.intc)[v]);
+        out << "Memory Watcher=>" << v << "\n int val=>" << c->intc << "\n Charter Val=>" << std::string(c->chc,8) << "\n";
+    }
 
     // 反编译当前语句
     void disasm(std::ostream &out = std::cout){
@@ -323,7 +340,7 @@ class VMRuntime{
         }else if(t.opid == UnusualRegister){
             if(t.c.intc == 0) return (char*)&thisTSS->fp;// fp
             if(t.c.intc == 1) return (char*)&thisTSS->sp;// sp
-            if(t.c.intc == 3) return (char*)&Alloc_Size;// sb
+            if(t.c.intc == 3) return (char*)&thisTSS->vstack_start;// sb
         }else if(t.opid == Address){
             return (char*)malloc_place + thisTSS->basememory.intc + t.c.intc;
         }else if(t.opid == Address_Register){
@@ -334,7 +351,7 @@ class VMRuntime{
     
     VMRuntime(VMExec& vme,int fd){
         vmexec = vme;
-        malloc_place = (char*) malloc(vme.cpool.size * 3 + vme.head.code_length * sizeof(ByteCode) + sizeof(TSS) + (sizeof(CodeLabel) * vme.head.code_label_count) + 1024);
+        malloc_place = (char*) malloc(1048576);
         char* memtop = malloc_place;
         // fill constant pool 
         memcpy(memtop,vmexec.cpool.pool,vmexec.cpool.size);
@@ -357,8 +374,8 @@ class VMRuntime{
         thisTSS->code_labels = codelbl_addr;
         memtop += sizeof(TSS);
         
-        thisTSS->vstack_start.intc = vme.cpool.size * 3 + vme.head.code_length * sizeof(ByteCode) + sizeof(TSS) + (sizeof(CodeLabel) * vme.head.code_label_count) + 1024 - 1;
-        Alloc_Size = vme.cpool.size * 3 + vme.head.code_length * sizeof(ByteCode) + sizeof(TSS) + (sizeof(CodeLabel) * vme.head.code_label_count) + 1024 - 1;
+        thisTSS->vstack_start.intc = 1048576-1;
+        Alloc_Size = 1048576-1;
         stack = vm_stack(malloc_place,thisTSS);
         pc.task = thisTSS;
         pc.basestr = malloc_place;
@@ -375,6 +392,7 @@ class VMRuntime{
         SeekToStart();
         while(COMMAND_MAP[pc.offset->c.intc] != "exit"){
             if(COMMAND_MAP[pc.offset->c.intc] != "ret") disasm();
+            
             if(intc.HasInterrputSignal){
             
             }
@@ -472,6 +490,21 @@ class VMRuntime{
                 stack.push(_Src,size.intc);
                 while(COMMAND_MAP[pc.offset->c.intc] != "call") pc++;
             }
+            #ifdef __VM_ENABLE_LINEDEBUGGER
+            while(true){
+            std::cout << "(debugger) > ";
+            std::string s;
+            long tmp = 0;
+            std::getline(std::cin,s);
+            Lexer lex(s);
+            std::string main = lex.getNextToken().str;
+            if(main == "debug_output") DebugOutput(std::cout);
+            else if(main == "mem") Memory_Watcher(atol(lex.getNextToken().str.data()),std::cout);
+            else if(main == "preg") std::cout << "reg" << (tmp = atol(lex.getNextToken().str.data())) << ": " << thisTSS->regs[tmp].intc << std::endl;
+            else if(main == "exit") break;
+            else if(main == "") break;
+            }
+            #endif
             pc++;
         }
     }

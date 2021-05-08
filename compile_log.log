@@ -6,21 +6,21 @@ This is a test file for Xlang compiler
 Writed by xiaokang00010 at Febuary,12th,2021
 */
 // for testing
-func int test(int:a){
-	return a+1;
+func int test(int:t){
+    if(t == 1){return 1;};
+    
+    int ret = test(t-1);
+    ret = ret + t;
+    return ret;
 };
 
-func int main(int:a){
-	int ret = test(a);
-	return ret;
-};
-int f = main(233);
+int f = test(10);
 
 --->reg0
---->233
+--->10
 --->reg0
 --->8
---->_main_int
+--->_test_int
 --->reg0
 --->regsb
 --->reg0
@@ -31,14 +31,43 @@ int f = main(233);
 --->[reg0]
 --->8
 --->reg0
+--->1
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->regsp
+--->[reg0]
+--->8
+--->reg0
+--->regsb
+--->reg0
+--->regfp
+--->reg0
+--->8
+--->reg1
+--->1
+--->reg0
+--->[reg0]
+--->reg0
+--->reg1
+--->2
+--->8
+--->reg0
 --->regsb
 --->reg0
 --->regfp
 --->reg0
 --->8
 --->reg0
---->281
+--->reg1
+--->1
+--->reg0
 --->[reg0]
+--->reg0
+--->reg1
+--->reg0
 --->8
 --->_test_int
 --->reg0
@@ -55,45 +84,70 @@ int f = main(233);
 --->regfp
 --->reg0
 --->16
+--->reg1
+--->regsb
+--->reg1
+--->regfp
+--->reg1
+--->16
+--->reg2
+--->regsb
+--->reg2
+--->regfp
+--->reg2
+--->8
+--->reg1
+--->[reg1]
+--->reg2
+--->[reg2]
+--->reg1
+--->reg2
 --->[reg0]
+--->reg1
 --->8
 --->reg0
 --->regsb
 --->reg0
 --->regfp
 --->reg0
---->8
---->reg1
---->1
---->reg0
---->[reg0]
---->reg0
---->reg1
---->reg0
---->regsb
---->reg0
---->regfp
---->reg0
---->regsp
+--->16
 --->[reg0]
 --->8
 [32m_vmstart:[0m
 save;
-mov reg0,233;
+mov reg0,10;
 push reg0,8;
-call _main_int;
+call _test_int;
 mov reg0,regsb;
 sub reg0,regfp;
 sub reg0,regsp;
 mov_m [0],[reg0],8;
 exit;
-[32m_main_int:[0m
+[32m_test_int:[0m
+mov reg0,regsb;
+sub reg0,regfp;
+sub reg0,8;
+mov reg1,1;
+mov reg0,[reg0];
+equ reg0,reg1;
+jt 2;
+jf 8;
+mov reg0,1;
+push reg0,8;
+mov reg0,regsb;
+sub reg0,regfp;
+sub reg0,regsp;
+ret [reg0],8;
+jmp 1;
 save;
 mov reg0,regsb;
 sub reg0,regfp;
 sub reg0,8;
-add reg0,281;
-push [reg0],8;
+add reg0,289;
+mov reg1,1;
+mov reg0,[reg0];
+sub reg0,reg1;
+push reg0,8;
 call _test_int;
 mov reg0,regsb;
 sub reg0,regfp;
@@ -102,17 +156,18 @@ push [reg0],8;
 mov reg0,regsb;
 sub reg0,regfp;
 sub reg0,16;
-ret [reg0],8;
-[32m_test_int:[0m
+mov reg1,regsb;
+sub reg1,regfp;
+sub reg1,16;
+mov reg2,regsb;
+sub reg2,regfp;
+sub reg2,8;
+mov reg1,[reg1];
+mov reg2,[reg2];
+add reg1,reg2;
+mov_m [reg0],reg1,8;
 mov reg0,regsb;
 sub reg0,regfp;
-sub reg0,8;
-mov reg1,1;
-mov reg0,[reg0];
-add reg0,reg1;
-push reg0,8;
-mov reg0,regsb;
-sub reg0,regfp;
-sub reg0,regsp;
+sub reg0,16;
 ret [reg0],8;
 
