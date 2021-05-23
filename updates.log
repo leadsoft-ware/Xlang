@@ -1,8 +1,0 @@
-2021 3.25 Thursday:
-    Fixed bugs on variable definition statement.
-    Found bugs on save and ret command.
-2021 3.20 Sunday:
-    Fixed bugs
-2021 3.20 Saturday:
-    Added Array fast init
-    [type] arrname[ count ] = [1,2,...];

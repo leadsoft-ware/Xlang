@@ -1,5 +1,11 @@
 ### 语言 [README.md](README.md) | [README_zh-cn.md](README_zh-cn.md)
 ### 更新日志 [updates.log](updates.log)
+# 不再需要这个README文档
+# 注意
+**移除了旧编译器**
+为什么? 因为大量的bug存在于旧的编译器，我无法在短时间内修复，所以我选择了重构
+
+
 # 开始
 ## 下载并编译
 - 首先，将此存储库下载到您的计算机。
