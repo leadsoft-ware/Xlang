@@ -8,7 +8,7 @@ enum TOK_VALUE{
     tok_add,tok_sub,tok_mul,tok_div,tok_mod,/*+,-,*,/,%*/
     tok_addself,tok_subself,/*++,--*/
     tok_addwith,tok_subwith,tok_mulwith,tok_divwith,tok_modwith,/* += -= *= /= %= */
-    tok_semicolon,tok_colon,tok_cbracket,tok_sbracket,tok_code, /* ; , () [] {}*/
+    tok_semicolon,tok_colon,tok_cbracket,tok_sbracket,tok_block, /* ; , () [] {}*/
     tok_ptr,tok_ptrb,tok_eof,
 };
 
@@ -17,7 +17,7 @@ std::string TOK_DESP[] = {
     "tok_add","tok_sub","tok_mul","tok_div","tok_mod",/*+,-,*,/,%*/
     "tok_addself","tok_subself",/*++,--*/
     "tok_addwith","tok_subwith","tok_mulwith","tok_divwith","tok_modwith",/* += -= *= /= %= */
-    "tok_semicolon","tok_colon","tok_cbracket","tok_sbracket","tok_code", /* ; , () [] {}*/
+    "tok_semicolon","tok_colon","tok_cbracket","tok_sbracket","tok_block", /* ; , () [] {}*/
     "tok_ptr","tok_ptrb","tok_eof",
 };
 
@@ -51,6 +51,33 @@ class Lexer{
             bool f = false;
             while( ( isdigit(str[pos]) || (f == false && (f = str[pos] == '.')) ) && str[pos] != '\0') next();
             return Token(tok_int,str.substr(start,pos-start));
+        }else if(str[pos] == '{'){
+            int start = pos;
+            int looper = 1;
+            next();
+            while(looper){
+                if(str[pos] == '{') looper ++;
+                if(str[pos] == '}') looper --;
+            }
+            return Token(tok_block,str.substr(start,pos-start));
+        }else if(str[pos] == '('){
+            int start = pos;
+            int looper = 1;
+            next();
+            while(looper){
+                if(str[pos] == '(') looper ++;
+                if(str[pos] == ')') looper --;
+            }
+            return Token(tok_cbracket,str.substr(start,pos-start));
+        }else if(str[pos] == '['){
+            int start = pos;
+            int looper = 1;
+            next();
+            while(looper){
+                if(str[pos] == '[') looper ++;
+                if(str[pos] == ']') looper --;
+            }
+            return Token(tok_sbracket,str.substr(start,pos-start));
         }else{
             throw compiler_error("Unexecpted Token" + str[pos],line,col);
         }
