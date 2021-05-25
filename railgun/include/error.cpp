@@ -1,7 +1,8 @@
 #include <string>
+#include <sstream>
 #include <iostream>
 
-class compiler_error : public std::exception{
+class compiler_error{
     std::string error_kind;
     int line,col;
     public:
@@ -10,7 +11,9 @@ class compiler_error : public std::exception{
         this->line = line;
         this->col = col;
     }
-    void what(){
-        std::cerr << "[XlangError] At line " << line+1 << " col " << col+1 << " " << error_kind << std::endl;
+    const char* what(){
+        std::stringstream ss;
+        ss << "[XlangError] At line " << line+1 << " col " << col+1 << " " << error_kind << std::endl;
+        return ss.str().c_str();
     }
 };
