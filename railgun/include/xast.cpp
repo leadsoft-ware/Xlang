@@ -48,6 +48,7 @@ xast::astree xast::rule_parser::expression_parser::match(){
         left = astree("expression",{left,op,right});
         //lexer->getNextToken();
     }
+    //lexer->getNextToken();
     return left;
 }
 
@@ -62,6 +63,7 @@ xast::astree xast::rule_parser::term_parser::match(){
         left = astree("expression",{left,op,right});
         //lexer->getNextToken();
     }
+    //lexer->getNextToken();
     return left;
 }
 
@@ -69,11 +71,12 @@ xast::astree xast::rule_parser::primary_parser::match(){
     int line = lexer->line,col = lexer->col,pos = lexer->pos; // backup for rollback
     if(lexer->last.tok_val == tok_int || lexer->last.tok_val == tok_charter || lexer->last.tok_val == tok_string || lexer->last.tok_val == tok_id){xast::astree ast=xast::astree("primary",lexer->last);lexer->getNextToken();return ast;}
     else if(lexer->last.tok_val == tok_sbracketl){
+        lexer->getNextToken();
         xast::astree expr_match_result = xast::rule_parser::expression_parser(lexer).match();
         if(expr_match_result.matchWithRule == ""){
             failed_to_match;
         }
-        else if(lexer->getNextToken().tok_val != tok_sbracketr){
+        else if(lexer->last.tok_val != tok_sbracketr){
             failed_to_match;
         }
         else{
