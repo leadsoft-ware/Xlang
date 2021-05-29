@@ -14,7 +14,7 @@ namespace xast{
         std::string matchWithRule;
         Token tok;
         std::vector<astree> node;
-        astree(){}
+        astree();
         astree(std::string matchWithRule,Token t);
         astree(std::string matchWithRule,std::vector<astree> n);
     };
@@ -25,6 +25,18 @@ namespace xast{
             Lexer *lexer;
             public:
             primary_parser(Lexer *lexer);
+            astree match(); // 不匹配返回空树
+        };
+        class term_parser{
+            Lexer *lexer;
+            public:
+            term_parser(Lexer *lexer);
+            astree match(); // 不匹配返回空树
+        };
+        class boolean_parser{
+            Lexer *lexer;
+            public:
+            boolean_parser(Lexer *lexer);
             astree match(); // 不匹配返回空树
         };
         class expression_parser{

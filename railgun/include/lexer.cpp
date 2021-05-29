@@ -32,9 +32,10 @@ struct Token{
 };
 
 class Lexer{
-    int line,col,pos;
     std::string str;
     public:
+    Token last;
+    int line,col,pos;
     void next(){
         pos++;
         if(str[pos] == '\0'){return;}
@@ -43,72 +44,89 @@ class Lexer{
         return;
     }
     Token getNextToken(){
-        if(str[pos] == '\0') return Token(tok_eof,"\\0");
+        if(str[pos] == '\0') {last = Token(tok_eof,"\\0");return Token(tok_eof,"\\0");}
         if(str[pos] == '\n') while(str[pos] == '\n') next();
         if(str[pos] == ' ') while(str[pos] == ' ') next();
         if(isalpha(str[pos]) || str[pos] == '_'){
             int start = pos;
             while( ( isalpha(str[pos]) || isdigit(str[pos]) || str[pos] == '_' ) && str[pos] != '\0' ) next();
+            last = Token(tok_id,str.substr(start,pos-start));
             return Token(tok_id,str.substr(start,pos-start));
         }else if(isdigit(str[pos])){
             int start = pos;
             bool f = false;
             while( ( isdigit(str[pos]) || (f == false && (f = str[pos] == '.')) ) && str[pos] != '\0') next();
+            last = Token(tok_int,str.substr(start,pos-start));
             return Token(tok_int,str.substr(start,pos-start));
         }else if(str[pos] == '{'){
             next();
+            last = Token(tok_mbracketl,"{");
             return Token(tok_mbracketl,"{");
         }else if(str[pos] == '}'){
             next();
+            last = Token(tok_mbracketr,"}");
             return Token(tok_mbracketr,"}");
         }else if(str[pos] == '('){
             next();
+            last = Token(tok_sbracketl,"(");
             return Token(tok_sbracketl,"(");
         }else if(str[pos] == ')'){
             next();
+            last = Token(tok_sbracketr,")");
             return Token(tok_sbracketr,")");
         }else if(str[pos] == '['){
             next();
+            last = Token(tok_cbracketl,"[");
             return Token(tok_cbracketl,"[");
         }else if(str[pos] == ']'){
             next();
+            last = Token(tok_cbracketr,"]");
             return Token(tok_cbracketr,"]");
         }else if(str[pos] == ','){
             next();
+            last = Token(tok_colon,",");
             return Token(tok_colon,",");
         }else if(str[pos] == '+'){
             next();
-            if(str[pos] == '='){next();return Token(tok_addwith,"+=");}
-            else if(str[pos] == '+'){next();return Token(tok_addself,"++");}
+            if(str[pos] == '='){next();last = Token(tok_addwith,"+=");return Token(tok_addwith,"+=");}
+            else if(str[pos] == '+'){next();last = Token(tok_addself,"++");return Token(tok_addself,"++");}
+            last = Token(tok_add,"+");
             return Token(tok_add,"+");
         }else if(str[pos] == '-'){
             next();
-            if(str[pos] == '='){next();return Token(tok_subwith,"-=");}
-            else if(str[pos] == '-'){next();return Token(tok_subself,"--");}
-            return Token(tok_add,"-");
+            if(str[pos] == '='){next();last = Token(tok_subwith,"-=");return Token(tok_subwith,"-=");}
+            else if(str[pos] == '-'){next();last = Token(tok_subself,"--");return Token(tok_subself,"--");}
+            last = Token(tok_sub,"-");
+            return Token(tok_sub,"-");
         }else if(str[pos] == '*'){
             next();
-            if(str[pos] == '='){next();return Token(tok_mulwith,"*=");}
+            if(str[pos] == '='){next();last = Token(tok_mulwith,"*=");return Token(tok_mulwith,"*=");}
+            last = Token(tok_mul,"*");
             return Token(tok_mul,"*");
         }else if(str[pos] == '/'){
             next();
-            if(str[pos] == '='){next();return Token(tok_divwith,"/=");}
+            if(str[pos] == '='){next();last = Token(tok_divwith,"/=");return Token(tok_divwith,"/=");}
+            last = Token(tok_div,"/");
             return Token(tok_div,"/");
         }else if(str[pos] == '%'){
             next();
-            if(str[pos] == '%'){next();return Token(tok_modwith,"%=");}
+            if(str[pos] == '%'){next();last = Token(tok_modwith,"%=");return Token(tok_modwith,"%=");}
+            last = Token(tok_mod,"%");
             return Token(tok_mod,"%");
         }else if(str[pos] == '='){
             next();
-            if(str[pos] == '='){next();return Token(tok_equal,"==");}
+            if(str[pos] == '='){next();last = Token(tok_equal,"==");return Token(tok_equal,"==");}
+            last = Token(tok_eq,"=");
             return Token(tok_eq,"=");
         }else if(str[pos] == '>'){
             next();
-            if(str[pos] == '='){next();return Token(tok_maxeq,">=");}
+            if(str[pos] == '='){next();last = Token(tok_maxeq,">=");return Token(tok_maxeq,">=");}
+            last = Token(tok_max,">");
             return Token(tok_max,">");
         }else if(str[pos] == '<'){
             next();
-            if(str[pos] == '='){next();return Token(tok_mineq,"<=");}
+            if(str[pos] == '='){next();last = Token(tok_mineq,"<=");return Token(tok_mineq,"<=");}
+            last = Token(tok_min,"<");
             return Token(tok_min,"<");
         }else{
             throw compiler_error("Unexecpted Token" + str[pos],line,col);
