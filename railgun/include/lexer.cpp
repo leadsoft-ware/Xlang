@@ -6,18 +6,20 @@
 enum TOK_VALUE{
     tok_id,tok_charter,tok_string,tok_int, /*id,'any',"any",num[.num]*/
     tok_add,tok_sub,tok_mul,tok_div,tok_mod,/*+,-,*,/,%*/
+    tok_eq,tok_equal,tok_noteq,tok_maxeq,tok_mineq,tok_max,tok_min, /* = == != >= <= > < */
     tok_addself,tok_subself,/*++,--*/
     tok_addwith,tok_subwith,tok_mulwith,tok_divwith,tok_modwith,/* += -= *= /= %= */
-    tok_semicolon,tok_colon,tok_cbracket,tok_sbracket,tok_block, /* ; , () [] {}*/
+    tok_semicolon,tok_colon,tok_cbracketl,tok_cbracketr,tok_sbracketl,tok_sbracketr,tok_mbracketl,tok_mbracketr, /* ; , () [] {}*/
     tok_ptr,tok_getaddr,tok_eof,
 };
 
 std::string TOK_DESP[] = {
     "tok_id","tok_charter","tok_string","tok_int", /*id,'any',"any",num[.num]*/
     "tok_add","tok_sub","tok_mul","tok_div","tok_mod",/*+,-,*,/,%*/
+    "tok_eq","tok_equal","tok_noteq","tok_maxeq","tok_mineq","tok_max","tok_min", /* = == != >= <= > < */
     "tok_addself","tok_subself",/*++,--*/
     "tok_addwith","tok_subwith","tok_mulwith","tok_divwith","tok_modwith",/* += -= *= /= %= */
-    "tok_semicolon","tok_colon","tok_cbracket","tok_sbracket","tok_block", /* ; , () [] {}*/
+    "tok_semicolon","tok_colon","tok_cbracketl","tok_cbracketr","tok_sbracketl","tok_sbracketr","tok_mbracketl","tok_mbracketr", /* ; , () [] {}*/
     "tok_ptr","tok_getaddr","tok_eof",
 };
 
@@ -25,6 +27,7 @@ struct Token{
     TOK_VALUE tok_val;
     std::string str;
     Token(TOK_VALUE tokval,std::string str){this->tok_val = tokval;this->str = str;}
+    Token(){} // for class init
     std::string toString(){return TOK_DESP[tok_val]+":"+str;}
 };
 
@@ -53,35 +56,23 @@ class Lexer{
             while( ( isdigit(str[pos]) || (f == false && (f = str[pos] == '.')) ) && str[pos] != '\0') next();
             return Token(tok_int,str.substr(start,pos-start));
         }else if(str[pos] == '{'){
-            int start = pos;
-            int looper = 1;
             next();
-            while(looper){
-                if(str[pos] == '{') looper ++;
-                if(str[pos] == '}') looper --;
-                next();
-            }
-            return Token(tok_block,str.substr(start,pos-start));
+            return Token(tok_mbracketl,"{");
+        }else if(str[pos] == '}'){
+            next();
+            return Token(tok_mbracketr,"}");
         }else if(str[pos] == '('){
-            int start = pos;
-            int looper = 1;
             next();
-            while(looper){
-                if(str[pos] == '(') looper ++;
-                if(str[pos] == ')') looper --;
-                next();
-            }
-            return Token(tok_cbracket,str.substr(start,pos-start));
+            return Token(tok_sbracketl,"(");
+        }else if(str[pos] == ')'){
+            next();
+            return Token(tok_sbracketr,")");
         }else if(str[pos] == '['){
-            int start = pos;
-            int looper = 1;
             next();
-            while(looper){
-                if(str[pos] == '[') looper ++;
-                if(str[pos] == ']') looper --;
-                next();
-            }
-            return Token(tok_sbracket,str.substr(start,pos-start));
+            return Token(tok_cbracketl,"[");
+        }else if(str[pos] == ']'){
+            next();
+            return Token(tok_cbracketr,"]");
         }else if(str[pos] == ','){
             next();
             return Token(tok_colon,",");
@@ -98,7 +89,6 @@ class Lexer{
         }else if(str[pos] == '*'){
             next();
             if(str[pos] == '='){next();return Token(tok_mulwith,"*=");}
-            else if(str[pos] == '('){return Token(tok_ptr,getNextToken().str);} // 特殊情况特殊处理
             return Token(tok_mul,"*");
         }else if(str[pos] == '/'){
             next();
@@ -108,10 +98,18 @@ class Lexer{
             next();
             if(str[pos] == '%'){next();return Token(tok_modwith,"%=");}
             return Token(tok_mod,"%");
-        }else if(str[pos] == '&'){
+        }else if(str[pos] == '='){
             next();
-            if(str[pos] == '('){return Token(tok_getaddr,getNextToken().str);} // 特殊情况特殊处理
-            throw compiler_error("Unexecpted Token" + str[pos],line,col);
+            if(str[pos] == '='){next();return Token(tok_equal,"==");}
+            return Token(tok_eq,"=");
+        }else if(str[pos] == '>'){
+            next();
+            if(str[pos] == '='){next();return Token(tok_maxeq,">=");}
+            return Token(tok_max,">");
+        }else if(str[pos] == '<'){
+            next();
+            if(str[pos] == '='){next();return Token(tok_mineq,"<=");}
+            return Token(tok_min,"<");
         }else{
             throw compiler_error("Unexecpted Token" + str[pos],line,col);
         }
