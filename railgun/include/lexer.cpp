@@ -6,7 +6,7 @@
 enum TOK_VALUE{
     tok_id,tok_charter,tok_string,tok_int, /*id,'any',"any",num[.num]*/
     tok_add,tok_sub,tok_mul,tok_div,tok_mod,/*+,-,*,/,%*/
-    tok_eq,tok_equal,tok_noteq,tok_maxeq,tok_mineq,tok_max,tok_min, /* = == != >= <= > < */
+    tok_eq,tok_equal,tok_noteq,tok_maxeq,tok_mineq,tok_max,tok_min,tok_and,tok_or, /* = == != >= <= > < */
     tok_addself,tok_subself,/*++,--*/
     tok_addwith,tok_subwith,tok_mulwith,tok_divwith,tok_modwith,/* += -= *= /= %= */
     tok_semicolon,tok_colon,tok_cbracketl,tok_cbracketr,tok_sbracketl,tok_sbracketr,tok_mbracketl,tok_mbracketr, /* ; , () [] {}*/
@@ -16,7 +16,7 @@ enum TOK_VALUE{
 std::string TOK_DESP[] = {
     "tok_id","tok_charter","tok_string","tok_int", /*id,'any',"any",num[.num]*/
     "tok_add","tok_sub","tok_mul","tok_div","tok_mod",/*+,-,*,/,%*/
-    "tok_eq","tok_equal","tok_noteq","tok_maxeq","tok_mineq","tok_max","tok_min", /* = == != >= <= > < */
+    "tok_eq","tok_equal","tok_noteq","tok_maxeq","tok_mineq","tok_max","tok_min","tok_and","tok_or" /* = == != >= <= > < */
     "tok_addself","tok_subself",/*++,--*/
     "tok_addwith","tok_subwith","tok_mulwith","tok_divwith","tok_modwith",/* += -= *= /= %= */
     "tok_semicolon","tok_colon","tok_cbracketl","tok_cbracketr","tok_sbracketl","tok_sbracketr","tok_mbracketl","tok_mbracketr", /* ; , () [] {}*/
@@ -100,36 +100,44 @@ class Lexer{
             return Token(tok_sub,"-");
         }else if(str[pos] == '*'){
             next();
-            if(str[pos] == '='){next();last = Token(tok_mulwith,"*=");return Token(tok_mulwith,"*=");}
+            if(str[pos] == '='){next();last = Token(tok_mulwith,"*=");return last;}
             last = Token(tok_mul,"*");
-            return Token(tok_mul,"*");
+            return last;
         }else if(str[pos] == '/'){
             next();
-            if(str[pos] == '='){next();last = Token(tok_divwith,"/=");return Token(tok_divwith,"/=");}
+            if(str[pos] == '='){next();last = Token(tok_divwith,"/=");return last;}
             last = Token(tok_div,"/");
-            return Token(tok_div,"/");
+            return last;
         }else if(str[pos] == '%'){
             next();
-            if(str[pos] == '%'){next();last = Token(tok_modwith,"%=");return Token(tok_modwith,"%=");}
+            if(str[pos] == '%'){next();last = Token(tok_modwith,"%=");return last;}
             last = Token(tok_mod,"%");
-            return Token(tok_mod,"%");
+            return last;
         }else if(str[pos] == '='){
             next();
-            if(str[pos] == '='){next();last = Token(tok_equal,"==");return Token(tok_equal,"==");}
+            if(str[pos] == '='){next();last = Token(tok_equal,"==");last;}
             last = Token(tok_eq,"=");
-            return Token(tok_eq,"=");
+            return last;
         }else if(str[pos] == '>'){
             next();
-            if(str[pos] == '='){next();last = Token(tok_maxeq,">=");return Token(tok_maxeq,">=");}
+            if(str[pos] == '='){next();last = Token(tok_maxeq,">=");return last;}
             last = Token(tok_max,">");
-            return Token(tok_max,">");
+            return last;
         }else if(str[pos] == '<'){
             next();
-            if(str[pos] == '='){next();last = Token(tok_mineq,"<=");return Token(tok_mineq,"<=");}
+            if(str[pos] == '='){next();last = Token(tok_mineq,"<=");return last;}
             last = Token(tok_min,"<");
-            return Token(tok_min,"<");
+            return last;
+        }else if(str[pos] == '&'){
+            next();
+            if(str[pos] == '&'){next();last = Token(tok_and,"&&");return last;}
+            throw compiler_error("Unexecpted Token:" + std::string("" + str[pos]) + "\nIn xlang, binary expression doesn't work with this form",line+1,col+1);
+        }else if(str[pos] == '|'){
+            next();
+            if(str[pos] == '|'){next();last = Token(tok_or,"||");return last;}
+            throw compiler_error("Unexecpted Token:" + std::string("" + str[pos]) + "\nIn xlang, binary expression doesn't work with this form",line+1,col+1);
         }else{
-            throw compiler_error("Unexecpted Token" + str[pos],line,col);
+            throw compiler_error("Unexecpted Token" + str[pos],line+1,col+1);
         }
     }
     Lexer(std::string str){

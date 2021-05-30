@@ -33,22 +33,77 @@ namespace xast{
             term_parser(Lexer *lexer);
             astree match(); // 不匹配返回空树
         };
-        class boolean_parser{
+        class addexpr_parser{
             Lexer *lexer;
             public:
-            boolean_parser(Lexer *lexer);
+            addexpr_parser(Lexer *lexer);
             astree match(); // 不匹配返回空树
         };
-        class expression_parser{
+        class relexpr_parser{
             Lexer *lexer;
             public:
-            expression_parser(Lexer *lexer);
+            relexpr_parser(Lexer *lexer);
+            astree match(); // 不匹配返回空树
+        };
+        class eqexpr_parser{
+            Lexer *lexer;
+            public:
+            eqexpr_parser(Lexer *lexer);
+            astree match(); // 不匹配返回空树
+        };
+        class andexpr_parser{
+            Lexer *lexer;
+            public:
+            andexpr_parser(Lexer *lexer);
+            astree match(); // 不匹配返回空树
+        };
+        class orexpr_parser{
+            Lexer *lexer;
+            public:
+            orexpr_parser(Lexer *lexer);
+            astree match(); // 不匹配返回空树
+        };
+        class argument_parser{
+            Lexer *lexer;
+            public:
+            argument_parser(Lexer *lexer);
             astree match(); // 不匹配返回空树
         };
         class block_parser{
             Lexer *lexer;
             public:
             block_parser(Lexer *lexer);
+            astree match(); // 不匹配返回空树
+        };
+        class function_call_statement_parser{
+            Lexer *lexer;
+            public:
+            function_call_statement_parser(Lexer *lexer);
+            astree match(); // 不匹配返回空树
+        };
+        class if_stmt_parser{
+            Lexer *lexer;
+            public:
+            if_stmt_parser(Lexer *lexer);
+            astree match(); // 不匹配返回空树
+        };
+        class while_stmt_parser{
+            Lexer *lexer;
+            public:
+            while_stmt_parser(Lexer *lexer);
+            astree match(); // 不匹配返回空树
+        };
+        class for_stmt_parser{
+            Lexer *lexer;
+            public:
+            for_stmt_parser(Lexer *lexer);
+            astree match(); // 不匹配返回空树
+        };
+        // 变量定义，返回，等语句
+        class normal_stmt_parser{
+            Lexer *lexer;
+            public:
+            normal_stmt_parser(Lexer *lexer);
             astree match(); // 不匹配返回空树
         };
         class statement_parser{
