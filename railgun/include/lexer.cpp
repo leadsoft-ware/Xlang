@@ -6,21 +6,21 @@
 enum TOK_VALUE{
     tok_id,tok_charter,tok_string,tok_int, /*id,'any',"any",num[.num]*/
     tok_add,tok_sub,tok_mul,tok_div,tok_mod,/*+,-,*,/,%*/
-    tok_eq,tok_equal,tok_noteq,tok_maxeq,tok_mineq,tok_max,tok_min,tok_and,tok_or, /* = == != >= <= > < */
+    tok_eq,tok_equal,tok_noteq,tok_maxeq,tok_mineq,tok_max,tok_min,tok_and,tok_or, /* = == != >= <= > < && || */
     tok_addself,tok_subself,/*++,--*/
     tok_addwith,tok_subwith,tok_mulwith,tok_divwith,tok_modwith,/* += -= *= /= %= */
     tok_semicolon,tok_colon,tok_cbracketl,tok_cbracketr,tok_sbracketl,tok_sbracketr,tok_mbracketl,tok_mbracketr, /* ; , () [] {}*/
-    tok_ptr,tok_getaddr,tok_eof,
+    tok_dot,tok_hrefto,tok_eof, /* . -> \0 */
 };
 
 std::string TOK_DESP[] = {
     "tok_id","tok_charter","tok_string","tok_int", /*id,'any',"any",num[.num]*/
     "tok_add","tok_sub","tok_mul","tok_div","tok_mod",/*+,-,*,/,%*/
-    "tok_eq","tok_equal","tok_noteq","tok_maxeq","tok_mineq","tok_max","tok_min","tok_and","tok_or" /* = == != >= <= > < */
+    "tok_eq","tok_equal","tok_noteq","tok_maxeq","tok_mineq","tok_max","tok_min","tok_and","tok_or", /* = == != >= <= > < && ||*/
     "tok_addself","tok_subself",/*++,--*/
     "tok_addwith","tok_subwith","tok_mulwith","tok_divwith","tok_modwith",/* += -= *= /= %= */
     "tok_semicolon","tok_colon","tok_cbracketl","tok_cbracketr","tok_sbracketl","tok_sbracketr","tok_mbracketl","tok_mbracketr", /* ; , () [] {}*/
-    "tok_ptr","tok_getaddr","tok_eof",
+    "tok_dot","tok_hrefto","tok_eof",
 };
 
 struct Token{
@@ -94,10 +94,11 @@ class Lexer{
             return Token(tok_add,"+");
         }else if(str[pos] == '-'){
             next();
-            if(str[pos] == '='){next();last = Token(tok_subwith,"-=");return Token(tok_subwith,"-=");}
-            else if(str[pos] == '-'){next();last = Token(tok_subself,"--");return Token(tok_subself,"--");}
+            if(str[pos] == '='){next();last = Token(tok_subwith,"-=");return last;}
+            else if(str[pos] == '-'){next();last = Token(tok_subself,"--");return last;}
+            else if(str[pos] == '>'){next();last = Token(tok_hrefto,"->");return last;}
             last = Token(tok_sub,"-");
-            return Token(tok_sub,"-");
+            return last;
         }else if(str[pos] == '*'){
             next();
             if(str[pos] == '='){next();last = Token(tok_mulwith,"*=");return last;}
@@ -115,7 +116,7 @@ class Lexer{
             return last;
         }else if(str[pos] == '='){
             next();
-            if(str[pos] == '='){next();last = Token(tok_equal,"==");last;}
+            if(str[pos] == '='){next();last = Token(tok_equal,"==");return last;}
             last = Token(tok_eq,"=");
             return last;
         }else if(str[pos] == '>'){
@@ -136,6 +137,10 @@ class Lexer{
             next();
             if(str[pos] == '|'){next();last = Token(tok_or,"||");return last;}
             throw compiler_error("Unexecpted Token:" + std::string("" + str[pos]) + "\nIn xlang, binary expression doesn't work with this form",line+1,col+1);
+        }else if(str[pos] == '.'){
+            next();
+            last = Token(tok_dot,".");
+            return last;
         }else{
             throw compiler_error("Unexecpted Token" + str[pos],line+1,col+1);
         }
