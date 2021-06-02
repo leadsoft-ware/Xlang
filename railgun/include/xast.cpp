@@ -28,6 +28,10 @@ xast::astree::astree(std::string matchWithRule,std::vector<astree> n){
 
 xast::rule_parser::memberexpr_parser::memberexpr_parser(Lexer *lexer){this->lexer = lexer;}
 
+xast::rule_parser::indexof_parser::indexof_parser(Lexer *lexer){this->lexer = lexer;}
+
+xast::rule_parser::arraysubscript_parser::arraysubscript_parser(Lexer *lexer){this->lexer = lexer;}
+
 xast::rule_parser::primary_parser::primary_parser(Lexer *lexer){this->lexer = lexer;}
 
 xast::rule_parser::term_parser::term_parser(Lexer *lexer){this->lexer = lexer;}
@@ -131,12 +135,12 @@ xast::astree xast::rule_parser::addexpr_parser::match(){
 
 xast::astree xast::rule_parser::term_parser::match(){
     //backup_for_rollback;
-    xast::astree left = xast::rule_parser::memberexpr_parser(lexer).match();
+    xast::astree left = xast::rule_parser::indexof_parser(lexer).match();
     //if(!(lexer->last.tok_val == tok_mul || lexer->last.tok_val == tok_div || lexer->last.tok_val == tok_mod)){failed_to_match;}
     while(lexer->last.tok_val == tok_mul || lexer->last.tok_val == tok_div || lexer->last.tok_val == tok_mod){
         astree op = astree("operator",lexer->last);
         lexer->getNextToken();
-        astree right = xast::rule_parser::memberexpr_parser(lexer).match();
+        astree right = xast::rule_parser::indexof_parser(lexer).match();
         left = astree("expression",{left,op,right});
         //lexer->getNextToken();
     }
@@ -147,15 +151,35 @@ xast::astree xast::rule_parser::term_parser::match(){
 xast::astree xast::rule_parser::memberexpr_parser::match(){
     //backup_for_rollback;
     xast::astree left = xast::rule_parser::primary_parser(lexer).match();
-    //if(!(lexer->last.tok_val == tok_mul || lexer->last.tok_val == tok_div || lexer->last.tok_val == tok_mod)){failed_to_match;}
-    while(lexer->last.tok_val == tok_hrefto || lexer->last.tok_val == tok_dot){
-        astree op = astree("operator",lexer->last);
-        lexer->getNextToken();
-        astree right = xast::rule_parser::primary_parser(lexer).match();
-        left = astree("member_expression",{left,op,right});
-        //lexer->getNextToken();
+    if(lexer->last.tok_val != tok_dot) return left;
+    lexer->getNextToken(); // move to next token
+    xast::astree right = xast::rule_parser::memberexpr_parser(lexer).match();
+    return astree("member_expression",{left,astree("primary",Token(tok_dot,".")),right});
+}
+
+xast::astree xast::rule_parser::arraysubscript_parser::match(){
+    backup_for_rollback;
+    if(lexer->last.str != "["){failed_to_match;}
+    lexer->getNextToken();
+    xast::astree ast = xast::rule_parser::orexpr_parser(lexer).match();
+    if(ast.matchWithRule == ""){failed_to_match;}
+    if(lexer->last.str != "]"){failed_to_match;}
+    lexer->getNextToken();
+    return astree("arraysubscript",{ast});
+}
+
+xast::astree xast::rule_parser::indexof_parser::match(){
+    backup_for_rollback;
+    xast::astree left = xast::rule_parser::memberexpr_parser(lexer).match();
+    if(left.matchWithRule == ""){failed_to_match;}
+    xast::astree temp;
+    temp = xast::rule_parser::arraysubscript_parser(lexer).match();
+    if(temp.matchWithRule == "") return left;
+    left = astree("indexof",{left}); // 重新构造ast
+    while(temp.matchWithRule != ""){
+        left.node.push_back(temp);
+        temp = xast::rule_parser::arraysubscript_parser(lexer).match();
     }
-    //lexer->getNextToken();
     return left;
 }
 

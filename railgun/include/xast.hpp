@@ -27,6 +27,18 @@ namespace xast{
             memberexpr_parser(Lexer *lexer);
             astree match(); // 不匹配返回空树
         };
+        class indexof_parser{
+            Lexer *lexer;
+            public:
+            indexof_parser(Lexer *lexer);
+            astree match(); // 不匹配返回空树
+        };
+        class arraysubscript_parser{
+            Lexer *lexer;
+            public:
+            arraysubscript_parser(Lexer *lexer);
+            astree match(); // 不匹配返回空树
+        };
         class primary_parser{
             Lexer *lexer;
             public:
