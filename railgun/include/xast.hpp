@@ -81,6 +81,12 @@ namespace xast{
             orexpr_parser(Lexer *lexer);
             astree match(); // 不匹配返回空树
         };
+        class rightexpr_parser{
+            Lexer *lexer;
+            public:
+            rightexpr_parser(Lexer *lexer);
+            astree match(); // 不匹配返回空树
+        };
         class argument_parser{
             Lexer *lexer;
             public:

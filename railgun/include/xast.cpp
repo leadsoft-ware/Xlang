@@ -6,7 +6,8 @@
 #include "xast.hpp"
 
 #define backup_for_rollback int line = lexer->line,col = lexer->col,pos = lexer->pos; Token backup_token = lexer->last
-#define failed_to_match lexer->line = line,lexer->col = col,lexer->pos = pos;lexer->last = backup_token; return astree()
+#define reset_to_backup lexer->line = line,lexer->col = col,lexer->pos = pos;lexer->last = backup_token
+#define failed_to_match reset_to_backup; return astree()
 
 xast::astree::astree(){
     matchWithRule = "";
@@ -46,6 +47,8 @@ xast::rule_parser::andexpr_parser::andexpr_parser(Lexer *lexer){this->lexer = le
 
 xast::rule_parser::orexpr_parser::orexpr_parser(Lexer *lexer){this->lexer = lexer;}
 
+xast::rule_parser::rightexpr_parser::rightexpr_parser(Lexer *lexer){this->lexer = lexer;}
+
 xast::rule_parser::argument_parser::argument_parser(Lexer *lexer){this->lexer = lexer;}
 
 xast::rule_parser::function_call_statement_parser::function_call_statement_parser(Lexer *lexer){this->lexer = lexer;}
@@ -57,6 +60,20 @@ xast::rule_parser::for_stmt_parser::for_stmt_parser(Lexer *lexer){this->lexer = 
 xast::rule_parser::while_stmt_parser::while_stmt_parser(Lexer *lexer){this->lexer = lexer;}
 
 xast::rule_parser::statement_parser::statement_parser(Lexer *lexer){this->lexer = lexer;}
+
+// 右结合表达式
+xast::astree xast::rule_parser::rightexpr_parser::match(){
+    backup_for_rollback;
+    xast::astree left = xast::rule_parser::indexof_parser(lexer).match();
+    if(lexer->last.tok_val != tok_eq){
+        reset_to_backup; // reset for re-read again
+        return xast::rule_parser::orexpr_parser(lexer).match();
+    }
+    Token op = lexer->last;
+    lexer->getNextToken();
+    xast::astree right = xast::rule_parser::orexpr_parser(lexer).match();
+    return xast::astree("rightexpr_parser",{left,astree("operator",op),right});
+}
 
 xast::astree xast::rule_parser::orexpr_parser::match(){
     //backup_for_rollback;
@@ -154,7 +171,7 @@ xast::astree xast::rule_parser::memberexpr_parser::match(){
     if(lexer->last.tok_val != tok_dot) return left;
     lexer->getNextToken(); // move to next token
     xast::astree right = xast::rule_parser::memberexpr_parser(lexer).match();
-    return astree("member_expression",{left,astree("primary",Token(tok_dot,".")),right});
+    return astree("member_expression",{left,astree("operator",Token(tok_dot,".")),right});
 }
 
 xast::astree xast::rule_parser::arraysubscript_parser::match(){
