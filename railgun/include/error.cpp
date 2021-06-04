@@ -17,3 +17,7 @@ class compiler_error{
         return ss.str().c_str();
     }
 };
+
+void sendWarning(std::string msg,int line,int col){
+    std::cout << "[XlangWarning] At line " << line+1 << " col " << col+1 << " " << msg << std::endl;
+}

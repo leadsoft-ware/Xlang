@@ -132,17 +132,21 @@ class Lexer{
         }else if(str[pos] == '&'){
             next();
             if(str[pos] == '&'){next();last = Token(tok_and,"&&");return last;}
-            throw compiler_error("Unexecpted Token:" + std::string("" + str[pos]) + "\nIn xlang, binary expression doesn't work with this form",line+1,col+1);
+            throw compiler_error("Unexpected Token:" + std::string("" + str[pos]) + "\nIn xlang, binary expression doesn't work with this form",line+1,col+1);
         }else if(str[pos] == '|'){
             next();
             if(str[pos] == '|'){next();last = Token(tok_or,"||");return last;}
-            throw compiler_error("Unexecpted Token:" + std::string("" + str[pos]) + "\nIn xlang, binary expression doesn't work with this form",line+1,col+1);
+            throw compiler_error("Unexpected Token:" + std::string("" + str[pos]) + "\nIn xlang, binary expression doesn't work with this form",line+1,col+1);
         }else if(str[pos] == '.'){
             next();
             last = Token(tok_dot,".");
             return last;
+        }else if(str[pos] == ';'){
+            next();
+            last = Token(tok_semicolon,";");
+            return last;
         }else{
-            throw compiler_error("Unexecpted Token" + str[pos],line+1,col+1);
+            throw compiler_error("Unexpected Token" + str[pos],line+1,col+1);
         }
     }
     Lexer(std::string str){

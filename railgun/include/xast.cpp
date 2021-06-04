@@ -53,6 +53,8 @@ xast::rule_parser::argument_parser::argument_parser(Lexer *lexer){this->lexer = 
 
 xast::rule_parser::function_call_statement_parser::function_call_statement_parser(Lexer *lexer){this->lexer = lexer;}
 
+xast::rule_parser::block_parser::block_parser(Lexer *lexer){this->lexer = lexer;}
+
 xast::rule_parser::if_stmt_parser::if_stmt_parser(Lexer *lexer){this->lexer = lexer;}
 
 xast::rule_parser::for_stmt_parser::for_stmt_parser(Lexer *lexer){this->lexer = lexer;}
@@ -72,7 +74,7 @@ xast::astree xast::rule_parser::rightexpr_parser::match(){
     Token op = lexer->last;
     lexer->getNextToken();
     xast::astree right = xast::rule_parser::orexpr_parser(lexer).match();
-    return xast::astree("rightexpr_parser",{left,astree("operator",op),right});
+    return xast::astree("rightexpr",{left,astree("operator",op),right});
 }
 
 xast::astree xast::rule_parser::orexpr_parser::match(){
@@ -241,14 +243,85 @@ xast::astree xast::rule_parser::argument_parser::match(){
 xast::astree xast::rule_parser::function_call_statement_parser::match(){
     backup_for_rollback;
     if(lexer->last.tok_val != tok_id){failed_to_match;}
-    // TODO: 后期在这里加member_expression的解析
+    // 后期在这里加member_expression的解析 Already had
 
     Token funcname = lexer->last;
     lexer->getNextToken();
-    if(lexer->last.tok_val != tok_sbracketl){std::cout << "failed!!!" << std::endl;failed_to_match;}
+    if(lexer->last.tok_val != tok_sbracketl){failed_to_match;}
     lexer->getNextToken();
     xast::astree args = xast::rule_parser::argument_parser(lexer).match();
-    if(lexer->last.tok_val != tok_sbracketr){throw compiler_error("execpted an ')'",lexer->line+1,lexer->col+1);failed_to_match;}
+    if(lexer->last.tok_val != tok_sbracketr){throw compiler_error("expected an ')'",lexer->line,lexer->col);failed_to_match;}
     lexer->getNextToken(); // 跳过右括号
     return astree("function_call_statement",{astree("id",funcname),args});
+}
+
+xast::astree xast::rule_parser::block_parser::match(){
+    xast::astree root("block",Token());
+    xast::astree temp = xast::rule_parser::statement_parser(lexer).match();
+    if(temp.matchWithRule == ""){lexer->getNextToken();return root;}
+    while(temp.matchWithRule != ""){
+        root.node.push_back(temp);
+        if(lexer->last.tok_val != tok_semicolon){throw compiler_error("expected a semicolon before next statement.",lexer->line,lexer->col);} // 与上注释相同
+        lexer->getNextToken();
+        temp = xast::rule_parser::statement_parser(lexer).match();
+    }
+    return root;
+}
+
+xast::astree xast::rule_parser::if_stmt_parser::match(){
+    backup_for_rollback; // must backup
+    if(lexer->last.tok_val != tok_id || lexer->last.str != "if"){failed_to_match;}
+    lexer->getNextToken();
+    if(lexer->last.tok_val != tok_sbracketl){throw compiler_error("bad if statement syntax.",lexer->line,lexer->col);} // 已经是编译错误了，没必要再保存源坐标,源坐标仅供返回
+    lexer->getNextToken();
+    xast::astree expr = xast::rule_parser::rightexpr_parser(lexer).match();
+    if(expr.matchWithRule == ""){throw compiler_error("bad if statement syntax.",lexer->line,lexer->col);}
+    if(lexer->last.tok_val != tok_sbracketr){throw compiler_error("bad if statement syntax.",lexer->line,lexer->col);} // 与上注释相同
+    lexer->getNextToken();
+    // code block
+    if(lexer->last.tok_val != tok_mbracketl){throw compiler_error("bad if statement syntax.",lexer->line,lexer->col);} // 与上注释相同
+    lexer->getNextToken();
+    xast::astree block = xast::rule_parser::block_parser(lexer).match();
+    if(lexer->last.tok_val != tok_mbracketr){throw compiler_error("bad if statement syntax.",lexer->line,lexer->col);} // 与上注释相同
+    lexer->getNextToken();
+    xast::astree root("if_stmt",{expr,block});
+    while(lexer->last.tok_val == tok_id && lexer->last.str == "else"){
+        lexer->getNextToken();
+        xast::astree temp = xast::rule_parser::if_stmt_parser(lexer).match(); // 类似于右结合生成
+        if(temp.matchWithRule == "") temp = xast::rule_parser::block_parser(lexer).match();
+        if(temp.matchWithRule == "") throw compiler_error("bad if statement syntax.",lexer->line,lexer->col); // 与上注释相同
+        root.node.push_back(astree("else",{temp}));
+    }
+    return root;
+}
+
+xast::astree xast::rule_parser::while_stmt_parser::match(){
+    backup_for_rollback;
+    if(lexer->last.tok_val != tok_id || lexer->last.str != "while"){failed_to_match;}
+    lexer->getNextToken();
+    if(lexer->last.tok_val != tok_sbracketl) throw compiler_error("bad while statement syntax.",lexer->line,lexer->col); // 与上注释相同
+    lexer->getNextToken();
+    xast::astree expr = xast::rule_parser::rightexpr_parser(lexer).match();
+    if(lexer->last.tok_val != tok_sbracketr) throw compiler_error("bad while statement syntax.",lexer->line,lexer->col); // 与上注释相同
+    lexer->getNextToken(); 
+    if(lexer->last.tok_val != tok_mbracketl) throw compiler_error("bad while statement syntax.",lexer->line,lexer->col); // 与上注释相同
+    lexer->getNextToken(); 
+    xast::astree block = xast::rule_parser::block_parser(lexer).match();
+    if(lexer->last.tok_val != tok_mbracketr) throw compiler_error("bad while statement syntax.",lexer->line,lexer->col); // 与上注释相同
+    lexer->getNextToken();
+    if(block.matchWithRule == "") throw compiler_error("bad while statement syntax.",lexer->line,lexer->col); // 与上注释相同
+    return astree("while_stmt",{expr,block});
+}
+
+// 因为blockstatement的解析，所以statement并不需要semicolon的解析
+xast::astree xast::rule_parser::statement_parser::match(){
+    xast::astree current;
+    current = xast::rule_parser::if_stmt_parser(lexer).match();
+    if(current.matchWithRule != "") return current;
+    current = xast::rule_parser::while_stmt_parser(lexer).match();
+    if(current.matchWithRule != "") return current;
+    current = xast::rule_parser::rightexpr_parser(lexer).match();
+    if(current.matchWithRule == "expression") sendWarning("An expression that has no effect on the program is calculated.",lexer->line,lexer->col);
+    if(current.matchWithRule != "") return current;
+    return current; // an empty value
 }

@@ -18,7 +18,7 @@ int main(){
             cout << endl;
             lexer.pos = 0;lexer.col = 0;lexer.line = 0;
             lexer.getNextToken();
-            xast::astree ast = xast::rule_parser::rightexpr_parser(&lexer).match();
+            xast::astree ast = xast::rule_parser::block_parser(&lexer).match();
             cout << ast.matchWithRule << endl;
         }catch(compiler_error e){
             std::cerr << e.what() << std::endl;
