@@ -11,10 +11,10 @@ class compiler_error{
         this->line = line;
         this->col = col;
     }
-    const char* what(){
+    std::string what(){
         std::stringstream ss;
         ss << "[XlangError] At line " << line+1 << " col " << col+1 << " " << error_kind << std::endl;
-        return ss.str().c_str();
+        return ss.str();
     }
 };
 

@@ -61,6 +61,8 @@ xast::rule_parser::for_stmt_parser::for_stmt_parser(Lexer *lexer){this->lexer = 
 
 xast::rule_parser::while_stmt_parser::while_stmt_parser(Lexer *lexer){this->lexer = lexer;}
 
+xast::rule_parser::normal_stmt_parser::normal_stmt_parser(Lexer *lexer){this->lexer = lexer;}
+
 xast::rule_parser::statement_parser::statement_parser(Lexer *lexer){this->lexer = lexer;}
 
 // 右结合表达式
@@ -81,7 +83,7 @@ xast::astree xast::rule_parser::orexpr_parser::match(){
     //backup_for_rollback;
     xast::astree left = xast::rule_parser::andexpr_parser(lexer).match();
     //if(!(lexer->last.tok_val == tok_add || lexer->last.tok_val == tok_sub)){failed_to_match;}
-    while(lexer->last.tok_val == tok_and){
+    while(lexer->last.tok_val == tok_or){
         astree op = astree("operator",lexer->last);
         lexer->getNextToken();
         astree right = xast::rule_parser::andexpr_parser(lexer).match();
@@ -126,7 +128,7 @@ xast::astree xast::rule_parser::relexpr_parser::match(){
     //backup_for_rollback;
     xast::astree left = xast::rule_parser::addexpr_parser(lexer).match();
     //if(!(lexer->last.tok_val == tok_add || lexer->last.tok_val == tok_sub)){failed_to_match;}
-    while(lexer->last.tok_val == tok_max || lexer->last.tok_val == tok_min){
+    while(lexer->last.tok_val == tok_max || lexer->last.tok_val == tok_min || lexer->last.tok_val == tok_maxeq || lexer->last.tok_val == tok_mineq){
         astree op = astree("operator",lexer->last);
         lexer->getNextToken();
         astree right = xast::rule_parser::addexpr_parser(lexer).match();
@@ -313,12 +315,61 @@ xast::astree xast::rule_parser::while_stmt_parser::match(){
     return astree("while_stmt",{expr,block});
 }
 
+xast::astree xast::rule_parser::for_stmt_parser::match(){
+    backup_for_rollback;
+    if(lexer->last.tok_val != tok_id || lexer->last.str != "for"){failed_to_match;}
+    lexer->getNextToken();
+    if(lexer->last.tok_val != tok_sbracketl) throw compiler_error("bad for statement syntax.",lexer->line,lexer->col); // 与上注释相同
+    lexer->getNextToken();
+    xast::astree expr("for_expr_block",Token());
+    expr.node.push_back(xast::rule_parser::rightexpr_parser(lexer).match());
+    if(expr.node[0].matchWithRule == "") throw compiler_error("bad for statement syntax.",lexer->line,lexer->col); // 与上注释相同
+    if(lexer->last.tok_val != tok_semicolon) throw compiler_error("bad for statement syntax.",lexer->line,lexer->col); // 与上注释相同
+    lexer->getNextToken();
+
+    expr.node.push_back(xast::rule_parser::rightexpr_parser(lexer).match());
+    if(expr.node[1].matchWithRule == "") throw compiler_error("bad for statement syntax.",lexer->line,lexer->col); // 与上注释相同
+    if(lexer->last.tok_val != tok_semicolon) throw compiler_error("bad for statement syntax.",lexer->line,lexer->col); // 与上注释相同
+    lexer->getNextToken();
+    
+    expr.node.push_back(xast::rule_parser::rightexpr_parser(lexer).match());
+    if(expr.node[2].matchWithRule == "") throw compiler_error("bad for statement syntax.",lexer->line,lexer->col); // 与上注释相同
+    
+    if(lexer->last.tok_val != tok_sbracketr) throw compiler_error("bad for statement syntax.",lexer->line,lexer->col); // 与上注释相同
+    lexer->getNextToken();
+    if(lexer->last.tok_val != tok_mbracketl) throw compiler_error("bad for statement syntax.",lexer->line,lexer->col); // 与上注释相同
+    lexer->getNextToken();
+    xast::astree block = xast::rule_parser::block_parser(lexer).match();
+    //lexer->getNextToken();
+    if(lexer->last.tok_val != tok_mbracketr) throw compiler_error("bad for statement syntax.",lexer->line,lexer->col); // 与上注释相同
+    lexer->getNextToken();
+    return astree("for_stmt",{expr,block});
+}
+
+// 一切带关键词语句的匹配
+xast::astree xast::rule_parser::normal_stmt_parser::match(){
+    backup_for_rollback;
+    xast::astree ast("normal_stmt_" + lexer->last.str,Token());
+    if(lexer->last.tok_val != tok_id || (lexer->last.str != "return" && lexer->last.str != "var" && lexer->last.str != "continue" && lexer->last.str != "break")){failed_to_match;}
+    if(lexer->last.str == "return" || lexer->last.str == "var"){
+        lexer->getNextToken();
+        ast.node.push_back(xast::rule_parser::rightexpr_parser(lexer).match());
+        if(ast.node[0].matchWithRule == "") throw compiler_error("bad return/var statement syntax",lexer->line,lexer->col);
+    }
+    // don't need getnexttoken because rightexpr already processed , here is a semicolon
+    return ast;
+}
+
 // 因为blockstatement的解析，所以statement并不需要semicolon的解析
 xast::astree xast::rule_parser::statement_parser::match(){
     xast::astree current;
     current = xast::rule_parser::if_stmt_parser(lexer).match();
     if(current.matchWithRule != "") return current;
     current = xast::rule_parser::while_stmt_parser(lexer).match();
+    if(current.matchWithRule != "") return current;
+    current = xast::rule_parser::for_stmt_parser(lexer).match();
+    if(current.matchWithRule != "") return current;
+    current = xast::rule_parser::normal_stmt_parser(lexer).match();
     if(current.matchWithRule != "") return current;
     current = xast::rule_parser::rightexpr_parser(lexer).match();
     if(current.matchWithRule == "expression") sendWarning("An expression that has no effect on the program is calculated.",lexer->line,lexer->col);
