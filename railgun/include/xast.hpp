@@ -100,6 +100,12 @@ namespace xast{
             block_parser(Lexer *lexer);
             astree match(); // 不匹配返回空树
         };
+        class function_def_stmt_parser{
+            Lexer *lexer;
+            public:
+            function_def_stmt_parser(Lexer *lexer);
+            astree match(); // 不匹配返回空树
+        };
         class function_call_statement_parser{
             Lexer *lexer;
             public:

@@ -10,8 +10,8 @@ enum TOK_VALUE{
     tok_eq,tok_equal,tok_noteq,tok_maxeq,tok_mineq,tok_max,tok_min,tok_and,tok_or, /* = == != >= <= > < && || */
     tok_addself,tok_subself,/*++,--*/
     tok_addwith,tok_subwith,tok_mulwith,tok_divwith,tok_modwith,/* += -= *= /= %= */
-    tok_semicolon,tok_colon,tok_cbracketl,tok_cbracketr,tok_sbracketl,tok_sbracketr,tok_mbracketl,tok_mbracketr, /* ; , () [] {}*/
-    tok_dot,tok_hrefto,tok_eof, /* . -> \0 */
+    tok_semicolon,tok_comma,tok_cbracketl,tok_cbracketr,tok_sbracketl,tok_sbracketr,tok_mbracketl,tok_mbracketr, /* ; , () [] {}*/
+    tok_colon,tok_dot,tok_hrefto,tok_eof, /* . -> \0 */
 };
 
 std::string TOK_DESP[] = {
@@ -20,8 +20,8 @@ std::string TOK_DESP[] = {
     "tok_eq","tok_equal","tok_noteq","tok_maxeq","tok_mineq","tok_max","tok_min","tok_and","tok_or", /* = == != >= <= > < && ||*/
     "tok_addself","tok_subself",/*++,--*/
     "tok_addwith","tok_subwith","tok_mulwith","tok_divwith","tok_modwith",/* += -= *= /= %= */
-    "tok_semicolon","tok_colon","tok_cbracketl","tok_cbracketr","tok_sbracketl","tok_sbracketr","tok_mbracketl","tok_mbracketr", /* ; , () [] {}*/
-    "tok_dot","tok_hrefto","tok_eof",
+    "tok_semicolon","tok_comma","tok_cbracketl","tok_cbracketr","tok_sbracketl","tok_sbracketr","tok_mbracketl","tok_mbracketr", /* ; , () [] {}*/
+    "tok_colon","tok_dot","tok_hrefto","tok_eof",
 };
 
 struct Token{
@@ -85,8 +85,8 @@ class Lexer{
             return Token(tok_cbracketr,"]");
         }else if(str[pos] == ','){
             next();
-            last = Token(tok_colon,",");
-            return Token(tok_colon,",");
+            last = Token(tok_comma,",");
+            return Token(tok_comma,",");
         }else if(str[pos] == '+'){
             next();
             if(str[pos] == '='){next();last = Token(tok_addwith,"+=");return Token(tok_addwith,"+=");}
@@ -146,8 +146,12 @@ class Lexer{
             next();
             last = Token(tok_semicolon,";");
             return last;
+        }else if(str[pos] == ':'){
+            next();
+            last = Token(tok_colon,":");
+            return last;
         }else{
-            throw compiler_error("Unexpected Token" + str[pos],line+1,col+1);
+            throw compiler_error(std::string("Unexpected Token") + str[pos],line,col);
         }
     }
     Lexer(std::string str){

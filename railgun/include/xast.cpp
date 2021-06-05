@@ -79,6 +79,8 @@ xast::rule_parser::argument_parser::argument_parser(Lexer *lexer){this->lexer = 
 
 xast::rule_parser::function_call_statement_parser::function_call_statement_parser(Lexer *lexer){this->lexer = lexer;}
 
+xast::rule_parser::function_def_stmt_parser::function_def_stmt_parser(Lexer *lexer){this->lexer = lexer;}
+
 xast::rule_parser::block_parser::block_parser(Lexer *lexer){this->lexer = lexer;}
 
 xast::rule_parser::if_stmt_parser::if_stmt_parser(Lexer *lexer){this->lexer = lexer;}
@@ -95,7 +97,7 @@ xast::rule_parser::statement_parser::statement_parser(Lexer *lexer){this->lexer 
 xast::astree xast::rule_parser::rightexpr_parser::match(){
     backup_for_rollback;
     xast::astree left = xast::rule_parser::indexof_parser(lexer).match();
-    if(lexer->last.tok_val != tok_eq){
+    if(lexer->last.tok_val != tok_eq && lexer->last.tok_val != tok_addwith && lexer->last.tok_val != tok_subwith && lexer->last.tok_val != tok_mulwith && lexer->last.tok_val != tok_divwith && lexer->last.tok_val != tok_modwith && lexer->last.tok_val != tok_colon){
         reset_to_backup; // reset for re-read again
         return xast::rule_parser::orexpr_parser(lexer).match();
     }
@@ -260,12 +262,36 @@ xast::astree xast::rule_parser::argument_parser::match(){
     ast.t = xast::astree::leaf;
     ast.matchWithRule = "argument";
     if(lexer->last.tok_val == tok_sbracketr || lexer->last.tok_val == tok_semicolon){return ast;} // 没有参数，返回，小括号右端要匹配，不用跳过
-    ast.node.push_back(xast::rule_parser::addexpr_parser(lexer).match());
-    while(lexer->last.tok_val == tok_colon){
+    ast.node.push_back(xast::rule_parser::rightexpr_parser(lexer).match());
+    while(lexer->last.tok_val == tok_comma){
         lexer->getNextToken();
-        xast::astree newer = xast::rule_parser::addexpr_parser(lexer).match();
+        xast::astree newer = xast::rule_parser::rightexpr_parser(lexer).match();
         ast.node.push_back(newer);
     }
+    return ast;
+}
+
+xast::astree xast::rule_parser::function_def_stmt_parser::match(){
+    backup_for_rollback;
+    if(lexer->last.tok_val != tok_id && lexer->last.str != "function"){failed_to_match;}
+    lexer->getNextToken();
+    xast::astree ast("function_def_stmt",{astree("primary",lexer->last)});
+
+    lexer->getNextToken();
+    if(lexer->last.tok_val != tok_sbracketl){failed_to_match;}
+    lexer->getNextToken();
+    xast::astree args = xast::rule_parser::argument_parser(lexer).match();
+    if(lexer->last.tok_val != tok_sbracketr){throw compiler_error("expected an ')'",lexer->line,lexer->col);failed_to_match;}
+    lexer->getNextToken(); // 跳过右括号
+
+    if(lexer->last.tok_val != tok_mbracketl){throw compiler_error("bad function define statement syntax.",lexer->line,lexer->col);} // 与上注释相同
+    lexer->getNextToken();
+    xast::astree block = xast::rule_parser::block_parser(lexer).match();
+    if(lexer->last.tok_val != tok_mbracketr){throw compiler_error("bad function define statement syntax.",lexer->line,lexer->col);} // 与上注释相同
+    lexer->getNextToken();
+    
+    ast.node.push_back(args);
+    ast.node.push_back(block);
     return ast;
 }
 
@@ -387,7 +413,7 @@ xast::astree xast::rule_parser::normal_stmt_parser::match(){
         xast::astree temp = xast::rule_parser::rightexpr_parser(lexer).match();
         while(temp.matchWithRule != ""){
             ast.node.push_back(temp);
-            if(lexer->last.tok_val != tok_colon){break;} // 走到头了，除非是syntax error
+            if(lexer->last.tok_val != tok_comma){break;} // 走到头了，除非是syntax error
             lexer->getNextToken();
             temp = xast::rule_parser::rightexpr_parser(lexer).match();
         }
@@ -405,6 +431,10 @@ xast::astree xast::rule_parser::statement_parser::match(){
     current = xast::rule_parser::while_stmt_parser(lexer).match();
     if(current.matchWithRule != "") return current;
     current = xast::rule_parser::for_stmt_parser(lexer).match();
+    if(current.matchWithRule != "") return current;
+    current = xast::rule_parser::function_call_statement_parser(lexer).match();
+    if(current.matchWithRule != "") return current;
+    current = xast::rule_parser::function_def_stmt_parser(lexer).match();
     if(current.matchWithRule != "") return current;
     current = xast::rule_parser::normal_stmt_parser(lexer).match();
     if(current.matchWithRule != "") return current;
