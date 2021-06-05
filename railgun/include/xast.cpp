@@ -9,6 +9,12 @@
 #define reset_to_backup lexer->line = line,lexer->col = col,lexer->pos = pos;lexer->last = backup_token
 #define failed_to_match reset_to_backup; return astree()
 
+std::string getSpace(int count){
+    std::string ret;
+    while(count--) ret += ' ';
+    return ret;
+}
+
 xast::astree::astree(){
     matchWithRule = "";
     this->t = child;
@@ -18,6 +24,7 @@ xast::astree::astree(){
 xast::astree::astree(std::string matchWithRule,Token t){
     this->t = child;
     this->matchWithRule = matchWithRule;
+    if(t.str == "") this->t = leaf; // 偷懒
     this->tok = t;
 }
 
@@ -25,6 +32,25 @@ xast::astree::astree(std::string matchWithRule,std::vector<astree> n){
     this->t = leaf;
     this->matchWithRule = matchWithRule;
     this->node = n;
+}
+
+std::string xast::astree::toString(int deepth){
+    std::stringstream ss;
+    // 在递归之前必须开新行
+    ss << "{" << std::endl << getSpace(deepth); // (lastline) (spaces: this_deepth - 1) { (nextline) (spaces: this_deepth)
+    ss << "type: " << "\"" << ( (this->t == leaf) ? "leaf" : "child" ) << "\"," << std::endl << getSpace(deepth); // type: "any", (nextline) (space: thisdeepth)
+    ss << "match: " << "\"" << this->matchWithRule << "\"," << std::endl; // type: "any", (nextline) (space: thisdeepth)
+    if(this->t == leaf){
+        ss << getSpace(deepth) << "node: [\n";
+        for(int i = 0;i < this->node.size();i++){
+            ss << getSpace(deepth+1) << this->node[i].toString(deepth+2) << ",";
+        }
+        ss << "\b\n" << getSpace(deepth) << "]";
+    }else{
+        ss << getSpace(deepth) << "token: " << "\"" << this->tok.toString() << "\"" << std::endl; // type: "any", (nextline) (space: thisdeepth)
+    }
+    ss << "\n" << getSpace(deepth-1) << "}";
+    return ss.str();
 }
 
 xast::rule_parser::memberexpr_parser::memberexpr_parser(Lexer *lexer){this->lexer = lexer;}

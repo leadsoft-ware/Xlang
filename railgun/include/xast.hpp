@@ -17,6 +17,7 @@ namespace xast{
         astree();
         astree(std::string matchWithRule,Token t);
         astree(std::string matchWithRule,std::vector<astree> n);
+        std::string toString(int deepth = 0);
     };
 
     // user customize , 如果没有匹配的token，请将pos,line,col三个变量拨回原始的地方

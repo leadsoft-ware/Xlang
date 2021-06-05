@@ -1,6 +1,8 @@
-# Xlang 文法
-# Xlang Basic Syntax
 
+# How to use?
+first, open tests folder, execute `g++ ast_test.cpp -g -o ast_test`,then execute `./ast_test terminal`.
+
+# Xlang 文法
 
 ```c
 memberexpr ::= primary { "." primary }
@@ -23,5 +25,66 @@ normal_stmt_return ::= "return" rightexpr
 normal_stmt_var ::= "var" rightexpr { "," rightexpr }
 normal_stmt_continue ::= "continue"
 normal_stmt_break ::= "break"
+```
+
+# Xlang AST Sample
+
+```json
+{
+ type: "leaf",
+ match: "block",
+ node: [
+  {
+   type: "leaf",
+   match: "if_stmt",
+   node: [
+    {
+     type: "leaf",
+     match: "expression",
+     node: [
+      {
+       type: "leaf",
+       match: "expression",
+       node: [
+        {
+         type: "child",
+         match: "primary",
+         token: "tok_int:1"
+
+        },        {
+         type: "child",
+         match: "operator",
+         token: "tok_add:+"
+
+        },        {
+         type: "child",
+         match: "primary",
+         token: "tok_int:1"
+
+        },
+       ]
+      },      {
+       type: "child",
+       match: "operator",
+       token: "tok_equal:=="
+
+      },      {
+       type: "child",
+       match: "primary",
+       token: "tok_int:2"
+
+      },
+     ]
+    },    {
+     type: "leaf",
+     match: "block",
+     node: [
+
+     ]
+    },
+   ]
+  },
+ ]
+}
 ```
 
