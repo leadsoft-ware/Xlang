@@ -258,7 +258,7 @@ xast::astree xast::rule_parser::argument_parser::match(){
     //backup_for_rollback;
     xast::astree ast;
     ast.matchWithRule = "argument";
-    if(lexer->last.tok_val == tok_sbracketr){return ast;} // 没有参数，返回，小括号右端要匹配，不用跳过
+    if(lexer->last.tok_val == tok_sbracketr || lexer->last.tok_val == tok_semicolon){return ast;} // 没有参数，返回，小括号右端要匹配，不用跳过
     ast.node.push_back(xast::rule_parser::addexpr_parser(lexer).match());
     while(lexer->last.tok_val == tok_colon){
         lexer->getNextToken();
