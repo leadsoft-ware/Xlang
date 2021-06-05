@@ -351,10 +351,20 @@ xast::astree xast::rule_parser::normal_stmt_parser::match(){
     backup_for_rollback;
     xast::astree ast("normal_stmt_" + lexer->last.str,Token());
     if(lexer->last.tok_val != tok_id || (lexer->last.str != "return" && lexer->last.str != "var" && lexer->last.str != "continue" && lexer->last.str != "break")){failed_to_match;}
-    if(lexer->last.str == "return" || lexer->last.str == "var"){
+    if(lexer->last.str == "return"){
         lexer->getNextToken();
         ast.node.push_back(xast::rule_parser::rightexpr_parser(lexer).match());
-        if(ast.node[0].matchWithRule == "") throw compiler_error("bad return/var statement syntax",lexer->line,lexer->col);
+        if(ast.node[0].matchWithRule == "") throw compiler_error("bad return statement syntax",lexer->line,lexer->col);
+    }else if(lexer->last.str == "var"){
+        lexer->getNextToken();
+        xast::astree temp = xast::rule_parser::rightexpr_parser(lexer).match();
+        while(temp.matchWithRule != ""){
+            ast.node.push_back(temp);
+            if(lexer->last.tok_val != tok_colon){break;} // 走到头了，除非是syntax error
+            lexer->getNextToken();
+            temp = xast::rule_parser::rightexpr_parser(lexer).match();
+        }
+        if(lexer->last.tok_val != tok_semicolon) throw compiler_error("bad var statement syntax",lexer->line,lexer->col);
     }
     // don't need getnexttoken because rightexpr already processed , here is a semicolon
     return ast;
