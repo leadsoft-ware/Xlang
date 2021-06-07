@@ -45,6 +45,42 @@ namespace xasm{
         content c;
     };
 
+    struct bytecode_block{
+        std::string block_name;
+        std::vector<bytecode> code;
+    };
+
+    struct asm_command{
+        std::string main;
+        std::vector<std::string> args;
+    };
+
+    struct asm_block{
+        std::string block_name;
+        std::vector<asm_command> code;
+        asm_block &newCommand(std::string main,std::vector<std::string> args){
+            code.push_back((asm_command){main,args});
+            return *this;
+        }
+
+        // 合并两个块,名字取本块的名字
+        asm_block &merge(asm_block &second){
+            for(int i = 0;i < second.code.size();i++) code.push_back(second.code[i]);
+            return *this;
+        }
+
+        // 非引用版
+        asm_block &merge(asm_block second){
+            for(int i = 0;i < second.code.size();i++) code.push_back(second.code[i]);
+            return *this;
+        }
+
+        asm_block &setName(std::string name){
+            block_name = name;
+            return *this;
+        }
+    };
+
     // xtime minimal virtual machine executable file -> Xmvef
     struct vmexec_file_header{
         unsigned long long xmvef_sign; // 验证是否为合法文件头 一般为0x114514ff
