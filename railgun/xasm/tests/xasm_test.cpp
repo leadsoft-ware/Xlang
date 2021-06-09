@@ -29,6 +29,7 @@ void terminal(){
             lexer.getNextToken();
             xast::astree ast = xast::rule_parser::asm_block_stmt_parser(&lexer).match();
             xasm::asm_block block = xasm::translateToASMStruct(ast);
+            xasm::bytecode_block bytecodes = xasm::translateToBytecode(block);
             cout << ast.toString(1) << endl;
         }catch(compiler_error e){
             cout << e.what();

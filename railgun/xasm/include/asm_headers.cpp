@@ -10,6 +10,20 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+bool is_number(std::string str){
+    for(int i = 0;i < str.length();i++) if(!isdigit(str[i])) return false;
+    return true;
+}
+
+bool is_decimal(std::string str){
+    bool flag = false;
+    for(int i = 0;i < str.length();i++){
+        if(str[i] == '.' && flag == false){flag = true;continue;}
+        if(!isdigit(str[i])){return false;}
+    }
+    return true;
+}
+
 namespace xasm{
     class xasm_error{
         std::string why;
@@ -35,13 +49,17 @@ namespace xasm{
         long long _intval;
         char _charval[8];
 
+        content(long x){_intval = x;}
+        content(long long x){_intval = x;}
+        content(int x){_intval = x;}
+        content(double d){_dblval = d;}
         long long &intval(){return _intval;}
         double &dblval(){return _dblval;}
         char* charval(){return (char*)&_charval;}
     };
 
     struct bytecode{
-        enum oper{_number,_address,_register,_addr_register} op;
+        enum oper{_command,_number,_address,_register,_addr_register} op;
         content c;
     };
 
@@ -119,8 +137,8 @@ namespace xasm{
         return;
     }
 
-    bool iskeyword(std::string s){
-        if(std::find(cmdset.begin(),cmdset.end(),s) != cmdset.end()) return true;
-        else return false;
+    int iskeyword(std::string s){
+        if(std::find(cmdset.begin(),cmdset.end(),s) != cmdset.end()) return std::find(cmdset.begin(),cmdset.end(),s) - cmdset.begin();
+        else return -1;
     }
 };
