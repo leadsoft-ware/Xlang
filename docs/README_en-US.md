@@ -1,4 +1,4 @@
-### Language [zh_cn](README.md) | [english](README_en-us.md) | [zh_hk](README_zh-hk.md) **Not finish yet**
+### Language [zh_cn](README.md) | [english](README_en-us.md)
 
 
 
