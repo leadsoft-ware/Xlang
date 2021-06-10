@@ -11,9 +11,9 @@ namespace xast::rule_parser{
             if(lexer->last.tok_val == tok_mul){
                 lexer->getNextToken();
                 xast::astree primary = xast::rule_parser::primary_parser(lexer).match();
-                primary.matchWithRule == "asm_primary_pointer";
-                if(primary.matchWithRule != "") return primary;
-                else failed_to_match;
+                if(primary.matchWithRule == ""){failed_to_match;}
+                primary.matchWithRule = "asm_primary_pointer";
+                return primary;
             }
             xast::astree primary = xast::rule_parser::primary_parser(lexer).match();
             if(primary.matchWithRule != "") primary.matchWithRule = "asm_primary";
@@ -120,17 +120,17 @@ namespace xasm{
             ret.code.push_back((bytecode){bytecode::_command,iskeyword(a.code[i].main)});
             for(int j = 0;j < a.code[i].args.size();j++){
                 std::string &str = a.code[i].args[j];
-                
+                if(str.substr(0,6) == "_addr_"){
+                    if(str.substr(6).substr(0,3) == "reg") ret.code.push_back((bytecode){bytecode::_addr_register,stol(str.substr(6).substr(3))});
+                    else if(is_number(str.substr(6))) ret.code.push_back((bytecode){bytecode::_address,stol(str.substr(6))});
+                    else throw compiler_error("[unknown position] unexecpted address",0,0);
+                    continue;
+                }
+
                 if(str.substr(0,3) == "reg") ret.code.push_back((bytecode){bytecode::_register,stol(str.substr(3))});
                 else if(is_decimal(str)) ret.code.push_back((bytecode){bytecode::_number,stod(str)});
                 else if(is_number(str)) ret.code.push_back((bytecode){bytecode::_number,stol(str)});
                 else throw compiler_error("[unknown position] unknown argument syntax",0,0);
-
-                if(str.substr(0,6) == "_addr_"){
-                    if(str.substr(0,3) == "reg") ret.code.push_back((bytecode){bytecode::_addr_register,stol(str.substr(3))});
-                    else if(is_number(str)) ret.code.push_back((bytecode){bytecode::_address,stol(str)});
-                    else throw compiler_error("[unknown position] unexecpted address",0,0);
-                }
             }
         }
         return ret;
