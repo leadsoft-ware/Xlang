@@ -1,14 +1,14 @@
- ### Language [zh_cn](README.md) | [english](README_en-US.md)
+### Language [zh_cn](README.md) | [english](README_en-us.md) | [zh_hk](README_zh-hk.md) **Not finish yet**
 
 
 
 
 
-### Xlang中文文档
+### Xlang English document
 
 
 
-**目前版本支持状态**
+**Xlang Version Support Status**
 
 - [ ] Xscript (All version)
 
@@ -18,17 +18,17 @@
 
 
 
-### 关于Xlang
+### About Xlang
 
 
 
-Xlang是一个编译型的小型语言，使用GPL开源协议，使用与其配套的XtimeVM(*未完成*)来运行字节码
+Xlang is a compiled programming language,open source with GPL agreement,using XtimeVM to run bytecode called Xasm(*Not finish yet*).
 
-**此项目目前没有任何实际用途，不推荐用于实际开发，仅供学习参考使用！**
+**Not recommended to actual development, it's only for reference use learning!**
 
 
 
-### Xlang文法：
+### Xlang grammar：
 
 
 
@@ -60,7 +60,7 @@ normal_stmt_break ::= "break"
 
 
 
-### Xasm基本语法
+### Xasm basic grammar
 
 ```c
 asm_primary ::= primary
