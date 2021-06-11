@@ -10,3 +10,6 @@ xlang: tests/ast_test.cpp include/*
 install: xasm xlang
 	mv xasm/tests/xasm build/
 	mv tests/xlang build/
+
+clean: 
+	rm -rf ./build/*
