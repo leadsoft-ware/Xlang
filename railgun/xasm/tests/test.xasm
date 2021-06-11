@@ -3,9 +3,3 @@ entry:{
     mov(reg1,1);
     add(reg0,reg1);
 }
-
-entry:{mov(reg0,0);mov(reg1,1);add(reg0,reg1);}
-entry:{mov(reg0,0);mov(*reg1,1);add(reg0,1);}
-
-set arg terminal
-b xasm_test.cpp:33

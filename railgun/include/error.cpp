@@ -21,3 +21,7 @@ class compiler_error{
 void sendWarning(std::string msg,int line,int col){
     std::cout << "[XlangWarning] At line " << line+1 << " col " << col+1 << " " << msg << std::endl;
 }
+
+void sendLog(std::string level,std::string msg){
+    std::cout << "[XlangLog/" << level << "]" << msg << std::endl;
+}

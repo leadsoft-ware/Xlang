@@ -39,6 +39,7 @@ class Lexer{
     int line,col,pos;
     void next(){
         pos++;
+        if(str[pos-1] == '\0'){pos--;return;}
         if(str[pos] == '\0'){return;}
         if(str[pos] == '\n'){line++;}
         else{col++;}
@@ -58,7 +59,14 @@ class Lexer{
             bool f = false;
             while( ( isdigit(str[pos]) || (f == false && (f = str[pos] == '.')) ) && str[pos] != '\0') next();
             last = Token(tok_int,str.substr(start,pos-start));
-            return Token(tok_int,str.substr(start,pos-start));
+            return last;
+        }else if(str[pos] == '"'){
+            next();
+            int start = pos;
+            while(str[pos] != '"' && str[pos] != '\0') next();
+            last = Token(tok_string,str.substr(start,pos-start));
+            next();
+            return last;
         }else if(str[pos] == '{'){
             next();
             last = Token(tok_mbracketl,"{");
