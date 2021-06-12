@@ -22,7 +22,7 @@
 
 
 
-Xlang is a compiled programming language,open source with GPL agreement,using XtimeVM to run bytecode called Xasm(*Not finish yet*).
+Xlang is a compiled programming language,open source with GPL license,using XtimeVM to run bytecode called Xasm(*Not finish yet*).
 
 **Not recommended to actual development, it's only for reference use learning!**
 

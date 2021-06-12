@@ -1,0 +1,16 @@
+name: Build-Linux
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: kurocha/setup-cpp@v1
+    - name: Pack
+      run: |
+       sudo apt install mingw-w64
+       cd ${{ github.workspace }} && git clone https://github.com/leadsoft-ware/Xlang
+       cd ${{ github.workspace }}/Xlang/railgun && make -f Makefile.WinPlatform install
+    - uses: actions/upload-artifact@v2
+      with:
+        name: build-windows
+        path: ${{ github.workspace }}/Xlang/railgun/build/*
