@@ -46,8 +46,11 @@ void with_file(){
     if(flags["log_level"] == "full") sendLog(flags["log_level"],"trying stat file");
     stat(flags["file"].c_str(),&file_info);
     if(flags["log_level"] == "full") sendLog(flags["log_level"],"allocating memory for code");
-    char* s = (char*)malloc(file_info.st_size+1);
+    char* s = (char*)malloc(file_info.st_size+2);
     read(fd,s,file_info.st_size);
+    // 防止傻逼awathefox抬杠
+    s[file_info.st_size+1] = '\0';
+    s[file_info.st_size] = '\0';
     Lexer lexer(s);
     //xast::astree ast("root",Token());
     std::vector<xasm::bytecode_block> blocks;
