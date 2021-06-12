@@ -39,7 +39,7 @@ namespace xasm{
         "eq","neq","maxeq","mineq","max","min",
         "_dbl_add","_dbl_mul","_dbl_div","_dbl_mod", // double command set
         "_dbl_eq","_dbl_neq","_dbl_maxeq","_dbl_mineq","_dbl_max","_dbl_min",
-        "jmp","call","mov","mov_m","mov1b", // push,pop,save,restore 等由libxasm的内置宏实现 mov1b target,val,pos[0-7]
+        "jmp","mov","mov_m","mov1b","push","pop","save","restore", // mov1b target,val,pos[0-7]
         "jt","jf", // jt/jf val 如果指定val为真或假，则跳转到相应地方
     };
 
@@ -99,7 +99,7 @@ namespace xasm{
         }
     };
 
-    // xtime minimal virtual machine executable file -> Xmvef
+    // Xtime minimal virtual machine executable file -> Xmvef
     struct vmexec_file_header{
         unsigned long long xmvef_sign; // 验证是否为合法文件头 一般为0x114514ff
         unsigned long long from_xlang_package_server; // 是否是官方认证的binary

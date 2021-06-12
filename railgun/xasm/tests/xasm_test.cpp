@@ -54,8 +54,14 @@ void with_file(){
     // ast generate
     if(flags["log_level"] == "full") sendLog(flags["log_level"],"start parse ast");
     while(!(lexer.getNextToken().tok_val == tok_eof)){
-        xast::astree ast = xast::rule_parser::asm_block_stmt_parser(&lexer).match();
+        xast::astree ast = xast::rule_parser::asm_main_stmt_parser(&lexer).match();
         if(ast.matchWithRule == "") throw compiler_error("failed to parse ast",lexer.line,lexer.col);
+        if(ast.matchWithRule == "function_call_statement"){
+            sendLog(flags["log_level"],"got a function call statement.");
+            if(ast.node[0].tok.str == "set_marco") marcos[ast.node[1].node[0].tok.str] = ast.node[1].node[1];
+            else sendWarning("unknown built-in function name",lexer.line,lexer.col);
+            continue;
+        }
         if(flags["log_level"] == "full") sendLog(flags["log_level"],"ast generated");
         xasm::asm_block temp_block = xasm::translateToASMStruct(ast);
         if(flags["log_level"] == "full") sendLog(flags["log_level"],"transated to asm_struct");

@@ -2,6 +2,7 @@
     Description:
     xast实现
 */
+#pragma once
 
 #include "xast.hpp"
 
@@ -248,6 +249,11 @@ xast::astree xast::rule_parser::primary_parser::match(){
             lexer->getNextToken(); // 跳过右括号,一般使用expression不需要这行
             return xast::astree("primary",{expr_match_result});
         }
+    }else if(lexer->last.tok_val == tok_mbracketl){
+        lexer->getNextToken();
+        xast::astree block_result = xast::rule_parser::block_parser(lexer).match();
+        lexer->getNextToken();
+        return block_result;
     }else if(lexer->last.tok_val == tok_id){
         xast::astree fc_stmt_result = xast::rule_parser::function_call_statement_parser(lexer).match();
         if(fc_stmt_result.matchWithRule == ""){Token ret = lexer->last;lexer->getNextToken();return xast::astree("primary",ret);} // 没获取到按正常id处理

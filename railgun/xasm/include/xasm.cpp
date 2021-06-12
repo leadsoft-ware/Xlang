@@ -1,5 +1,8 @@
 #include "../../include/xast.cpp"
 #include "asm_headers.cpp"
+#include <map>
+
+std::map<std::string,xast::astree> marcos; // for user marcos
 
 namespace xast::rule_parser{
     class asm_primary_parser{
@@ -47,8 +50,10 @@ namespace xast::rule_parser{
         // 匹配一行ast语句
         xast::astree match(){
             backup_for_rollback;
-            if(lexer->last.tok_val != tok_id || xasm::iskeyword(lexer->last.str) == -1){failed_to_match;}
-            xast::astree root("asm_"+lexer->last.str,Token());
+            if( lexer->last.tok_val != tok_id || ( xasm::iskeyword(lexer->last.str) == -1 && !marcos.count(lexer->last.str) ) ){failed_to_match;}
+            xast::astree root;
+            if(xasm::iskeyword(lexer->last.str) != -1) root = xast::astree("asm_"+lexer->last.str,Token());
+            else root = xast::astree("marco_"+lexer->last.str,Token());
 
             lexer->getNextToken();
             if(lexer->last.tok_val != tok_sbracketl){throw compiler_error("expected an '(' befoce arguments",lexer->line,lexer->col);}
@@ -82,10 +87,23 @@ namespace xast::rule_parser{
                 lexer->getNextToken();
                 temp = xast::rule_parser::asm_stmt_parser(lexer).match();
             }
+            //lexer->getNextToken();
             if(lexer->last.tok_val != tok_mbracketr){throw compiler_error("expected a '}' after block.",lexer->line,lexer->col);} // 与上注释相同
             lexer->getNextToken();
 
             return root;
+        }
+    };
+    class asm_main_stmt_parser{
+        Lexer *lexer;
+        public:
+        asm_main_stmt_parser(Lexer *lexer){this->lexer = lexer;}
+        xast::astree match(){
+            xast::astree ret;
+            ret = xast::rule_parser::function_call_statement_parser(lexer).match();
+            if(ret.matchWithRule != "") return ret;
+            ret = xast::rule_parser::asm_block_stmt_parser(lexer).match();
+            return ret;
         }
     };
 };
