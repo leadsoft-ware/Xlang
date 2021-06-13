@@ -1,10 +1,15 @@
+set_marco(jmp_nofx,{
+    mov(reg0,__marco_param0);
+    mov(reg1,regpc);
+    sub(reg0,reg1);
+    jmp(reg0);
+})
+
 set_marco(call,{
     push(reg16);
     push(reg17);
     push(reg18);
-    mov(reg15,__marco_param0);
-    sub(reg15,pc);
-    jmp(reg15);
+    jmp_nofx(__marco_param0);
 })
 
 set_marco(ret,{
@@ -18,6 +23,10 @@ set_marco(ret,{
     mov(reg18,reg0);
 })
 
-entry:{
+main:{
     ret(0);
+}
+
+entry:{
+    call(main);
 }

@@ -4,6 +4,7 @@
 
 std::map<std::string,xast::astree> marcos; // for user marcos
 
+
 namespace xast::rule_parser{
     class asm_primary_parser{
         Lexer *lexer;
@@ -179,13 +180,37 @@ namespace xasm{
         }
     }
 
-    bytecode_block translateToBytecode(asm_block &a){
+    //  计算从指定块开始到另一个指定块的距离
+    long long  countBytecodeBlock(std::vector<xasm::bytecode_block> &block_map,int idx_of_start = 0,int idx_of_end = INT32_MAX){
+        long long  ret = 0;
+        for(int i = idx_of_start;i != block_map.size();i++){
+            ret += block_map[i].code.size() - 1;
+            if(i == idx_of_end) return ret;
+        }
+        return ret;
+    }
+
+    // return an index of block
+    int inBlockMap(std::string name,std::vector<xasm::bytecode_block> &block_map){
+        for(auto i = block_map.begin();i != block_map.end();i++){
+            if(i->block_name == name) return i - block_map.begin();
+        }
+        return -1;
+    }
+
+    bytecode_block translateToBytecode(asm_block &a,std::vector<xasm::bytecode_block> &block_map){
         bytecode_block ret;
         ret.block_name = a.block_name;
         for(int i = 0;i < a.code.size();i++){
             ret.code.push_back((bytecode){bytecode::_command,iskeyword(a.code[i].main)});
             for(int j = 0;j < a.code[i].args.size();j++){
                 std::string &str = a.code[i].args[j];
+                // 判断是否为函数名
+                if(inBlockMap(str,block_map) != -1){
+                    ret.code.push_back((bytecode){bytecode::_number,countBytecodeBlock(block_map,0,inBlockMap(str,block_map)) + 1}); // 计算块的位置并加入字节码, 加一是因为计算的是块离0的距离，还得+1
+                    continue;
+                }
+
                 if(str.substr(0,6) == "_addr_"){
                     if(str.substr(6).substr(0,3) == "reg") ret.code.push_back((bytecode){bytecode::_addr_register,stol(str.substr(6).substr(3))});
                     else if(is_number(str.substr(6))) ret.code.push_back((bytecode){bytecode::_address,stol(str.substr(6))});

@@ -101,12 +101,12 @@ namespace xasm{
 
     // Xtime minimal virtual machine executable file -> Xmvef
     struct vmexec_file_header{
-        unsigned long long xmvef_sign; // 验证是否为合法文件头 一般为0x114514ff
-        unsigned long long from_xlang_package_server; // 是否是官方认证的binary
+        long long  xmvef_sign; // 验证是否为合法文件头 一般为0x114514ff
+        long long  from_xlang_package_server; // 是否是官方认证的binary
         char author[32]; // 作者名
         enum distribution_license{_gpl,_lgpl,_mit,_wtfpl,_apache} license; // 分发所使用的协议，默认gpl
-        unsigned long long default_constant_pool_size;
-        unsigned long long bytecode_length;
+        long long  default_constant_pool_size;
+        long long  bytecode_length;
     };
 
     struct xmvef_file{
