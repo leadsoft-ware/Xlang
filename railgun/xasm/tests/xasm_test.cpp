@@ -60,10 +60,9 @@ void with_file(){
     while(!(lexer.getNextToken().tok_val == tok_eof)){
         xast::astree ast = xast::rule_parser::asm_main_stmt_parser(&lexer).match();
         if(ast.matchWithRule == "") throw compiler_error("failed to parse ast",lexer.line,lexer.col);
-        if(ast.matchWithRule == "function_call_statement"){
-            sendLog(flags["log_level"],"got a function call statement.");
-            if(ast.node[0].tok.str == "set_marco") marcos[ast.node[1].node[0].tok.str] = ast.node[1].node[1];
-            else sendWarning("unknown built-in function name",lexer.line,lexer.col);
+        if(ast.matchWithRule == "asm_marco_stmt"){
+            sendLog(flags["log_level"],"got a marco statement.");
+            marcos[ast.node[0].tok.str] = ast.node[1];
             continue;
         }
         if(flags["log_level"] == "full") sendLog(flags["log_level"],"ast generated");
@@ -81,7 +80,7 @@ int main(int argc,const char** argv){
     #ifdef __xlang_insider
     cout << "Insider Preview: This product is not for personal users. Many features are not complete in this version." << endl;
     #endif
-    try{
+    /*try{*/
         parse_args(argc,argv);
         for(auto i = flags.begin();i != flags.end();i++){
             cout << "arg:" << i->first << ":" << i->second << " ";
@@ -89,9 +88,9 @@ int main(int argc,const char** argv){
         if(flags["terminal"] == "true") terminal();
         else if(flags["file"] != "") with_file();
         else throw compiler_error("unknown compiler mode",0,0);
-    }catch(compiler_error e){
+    /*}catch(compiler_error e){
         cout << e.what();
-    };
+    };*/
     string s;
     
 }

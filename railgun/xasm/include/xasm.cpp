@@ -67,18 +67,14 @@ namespace xast::rule_parser{
             return root;
         }
     };
-    class asm_block_stmt_parser{
+    class asm_block_parser{
         Lexer *lexer;
         public:
-        asm_block_stmt_parser(Lexer* lexer){this->lexer = lexer;}
+        asm_block_parser(Lexer* lexer){this->lexer = lexer;}
         xast::astree match(){
-            xast::astree primary = xast::rule_parser::primary_parser(lexer).match();
-            xast::astree root("asmblock",{primary});
-            if(primary.matchWithRule == "" || lexer->last.tok_val != tok_colon){throw compiler_error("asm block must have a name.",lexer->line,lexer->col);} // 与上注释相同
-            lexer->getNextToken();
             if(lexer->last.tok_val != tok_mbracketl){throw compiler_error("expected a '{' befoce block.",lexer->line,lexer->col);} // 与上注释相同
             lexer->getNextToken();
-
+            xast::astree root("_asm_block",Token());
             xast::astree temp = xast::rule_parser::asm_stmt_parser(lexer).match();
             if(temp.matchWithRule == ""){lexer->getNextToken();return root;}
             while(temp.matchWithRule != ""){
@@ -89,8 +85,42 @@ namespace xast::rule_parser{
             }
             //lexer->getNextToken();
             if(lexer->last.tok_val != tok_mbracketr){throw compiler_error("expected a '}' after block.",lexer->line,lexer->col);} // 与上注释相同
+            //lexer->getNextToken();
+            return root;
+        }
+    };
+    class asm_block_stmt_parser{
+        Lexer *lexer;
+        public:
+        asm_block_stmt_parser(Lexer* lexer){this->lexer = lexer;}
+        xast::astree match(){
+            xast::astree primary = xast::rule_parser::primary_parser(lexer).match();
+            xast::astree root("asmblock",{primary});
+            if(primary.matchWithRule == "" || lexer->last.tok_val != tok_colon){throw compiler_error("asm block must have a name.",lexer->line,lexer->col);} // 与上注释相同
             lexer->getNextToken();
-
+            xast::astree block = xast::rule_parser::asm_block_parser(lexer).match();
+            root.node.push_back(block);
+            return root;
+        }
+    };
+    class asm_marco_stmt_parser{
+        Lexer *lexer;
+        public:
+        asm_marco_stmt_parser(Lexer *lexer){this->lexer = lexer;}
+        xast::astree match(){
+            backup_for_rollback;
+            if(lexer->last.str != "set_marco"){failed_to_match;}
+            lexer->getNextToken();
+            if(lexer->last.tok_val != tok_sbracketl){throw compiler_error("expected a '(' befoce arguments.",lexer->line,lexer->col);} // 与上注释相同
+            lexer->getNextToken();
+            if(lexer->last.tok_val != tok_id){throw compiler_error("expected a marco name",lexer->line,lexer->col);} // 与上注释相同
+            xast::astree root("asm_marco_stmt",{xast::astree("primary",lexer->last)});
+            lexer->getNextToken();
+            if(lexer->last.tok_val != tok_comma){throw compiler_error("expected a comma befoce asm block",lexer->line,lexer->col);} // 与上注释相同
+            lexer->getNextToken();
+            xast::astree block = xast::rule_parser::asm_block_parser(lexer).match();
+            lexer->getNextToken();
+            root.node.push_back(block);
             return root;
         }
     };
@@ -100,7 +130,7 @@ namespace xast::rule_parser{
         asm_main_stmt_parser(Lexer *lexer){this->lexer = lexer;}
         xast::astree match(){
             xast::astree ret;
-            ret = xast::rule_parser::function_call_statement_parser(lexer).match();
+            ret = xast::rule_parser::asm_marco_stmt_parser(lexer).match();
             if(ret.matchWithRule != "") return ret;
             ret = xast::rule_parser::asm_block_stmt_parser(lexer).match();
             return ret;
@@ -114,7 +144,10 @@ namespace xasm{
         asm_block ret;
         if(stmt.matchWithRule == "asmblock"){
             ret.block_name = stmt.node[0].tok.str;
-            for(int i = 1;i < stmt.node.size();i++) ret.merge(translateToASMStruct(stmt.node[i]));
+            for(int i = 0;i < stmt.node[1].node.size();i++) ret.merge(translateToASMStruct(stmt.node[1].node[i]));
+            return ret;
+        }else if(stmt.matchWithRule == "_asm_block"){
+            for(int i = 0;i < stmt.node.size();i++) ret.merge(translateToASMStruct(stmt.node[i]));
             return ret;
         }else if(stmt.matchWithRule.substr(0,4) == "asm_"){
             std::vector<std::string> args;
@@ -125,6 +158,21 @@ namespace xasm{
             }
             asm_command c = (asm_command){stmt.matchWithRule.substr(4),args};
             ret.code.push_back(c);
+            return ret;
+        }else if(stmt.matchWithRule.substr(0,6) == "marco_"){
+            ret.merge(translateToASMStruct(marcos[stmt.matchWithRule.substr(6)]));
+            // 遍历每一行语句
+            for(int i = 0;i < ret.code.size();i++){
+                // 遍历每一个宏的调用参数
+                for(int j = 0;j < stmt.node[0].node.size();j++){
+                    if(ret.code[i].main == "_marco_param" + std::to_string(j)) ret.code[i].main = stmt.node[0].node[j].tok.str;
+                    // 遍历每一行语句的参数
+                    for(int k = 0;k < ret.code[i].args.size();k++){
+                        if(stmt.node[0].node[j].matchWithRule == "asm_primary_pointer") ret.code[i].args[k] = "_addr_" + stmt.node[0].node[j].tok.str;
+                        else ret.code[i].args[k] = stmt.node[0].node[j].tok.str;
+                    }
+                }
+            }
             return ret;
         }else{
             throw compiler_error("[unknown position] unknown asm match rule.",0,0);
