@@ -1,33 +1,23 @@
 set_marco(call,{
-    push(regfp);
-    push(regsp);
-    push(regpc);
+    push(reg16);
+    push(reg17);
+    push(reg18);
     mov(reg15,__marco_param0);
     sub(reg15,pc);
     jmp(reg15);
-});
+})
 
 set_marco(ret,{
-    mov(regsp,0);
+    mov(reg17,0);
     mov(reg15,__marco_param0);
     pop(reg0,8);
     pop(reg1,8);
     pop(reg2,8);
-    mov(regfp,reg2);
-    mov(regsp,reg1);
-    mov(regpc,reg0);
-});
-
-main:{
-    push(1);
-    mov(reg0,regfp);
-    sub(reg0,regsp);
-    add(reg0,8);
-    ret(reg0);
-}
+    mov(reg16,reg2);
+    mov(reg17,reg1);
+    mov(reg18,reg0);
+})
 
 entry:{
-    call(main);
-    mov(reg0,*reg15);
-    call(exit);
+    ret(0);
 }
