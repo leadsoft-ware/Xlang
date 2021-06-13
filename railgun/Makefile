@@ -12,4 +12,4 @@ install: Xasm Xlang
 	mv tests/xlang build/
 
 clean: 
-	rm -rf ./build/*
+	rm -rf ./build/xasm* ./build/xlang*
