@@ -61,10 +61,32 @@ void with_file(){
     if(flags["log_level"] == "full") sendLog(flags["log_level"],"start parse ast");
     while(!(lexer.getNextToken().tok_val == tok_eof)){
         xast::astree ast = xast::rule_parser::asm_main_stmt_parser(&lexer).match();
+        std::cout << ast.matchWithRule << std::endl;
         if(ast.matchWithRule == "") throw compiler_error("failed to parse ast",lexer.line,lexer.col);
         if(ast.matchWithRule == "asm_marco_stmt"){
             sendLog(flags["log_level"],"got a marco statement.");
-            marcos[ast.node[0].tok.str] = ast.node[1];
+            xasm::marcos[ast.node[0].tok.str] = ast.node[1];
+            continue;
+        }
+        if(ast.matchWithRule == "asm_db_size_stmt"){
+            xasm::database.resize(stol(ast.node[0].tok.str));
+            continue;
+        }
+        if(ast.matchWithRule == "asm_db_stmt"){
+            long long addr = stol(ast.node[0].tok.str);
+            std::string &toWrite = ast.node[1].tok.str;
+            xasm::content temp(0);
+            if(is_number(toWrite)){
+                temp = stol(toWrite);
+                for(int i = 0;i < 8;i++) xasm::database[addr + i] = temp._charval[i];
+            }else if(is_decimal(toWrite)){
+                temp = stod(toWrite);
+                for(int i = 0;i < 8;i++) xasm::database[addr + i] = temp._charval[i];
+            }else{
+                for(int i = 0;i < toWrite.length();i++){
+                    xasm::database[addr + i] = toWrite[i];
+                }
+            }
             continue;
         }
         if(flags["log_level"] == "full") sendLog(flags["log_level"],"ast generated");

@@ -2,8 +2,10 @@
 #include "asm_headers.cpp"
 #include <map>
 
-std::map<std::string,xast::astree> marcos; // for user marcos
-
+namespace xasm{
+    std::map<std::string,xast::astree> marcos; // for user marcos
+    std::string database; // 常量数据池
+};
 
 namespace xast::rule_parser{
     class asm_primary_parser{
@@ -44,6 +46,28 @@ namespace xast::rule_parser{
         }
     };
 
+    class asm_db_stmt_parser{
+        Lexer *lexer;
+        public:
+        asm_db_stmt_parser(Lexer *lexer){this->lexer = lexer;}
+        xast::astree match(){
+            backup_for_rollback;
+            if(lexer->last.str != "_db"){failed_to_match;}
+            lexer->getNextToken();
+            if(lexer->last.tok_val != tok_sbracketl){throw compiler_error("expected a '(' befoce arguments.",lexer->line,lexer->col);} // 与上注释相同
+            lexer->getNextToken();
+            if(lexer->last.tok_val != tok_int){throw compiler_error("expected a data address",lexer->line,lexer->col);} // 与上注释相同
+            xast::astree root("asm_db_stmt",{xast::astree("primary",lexer->last)});
+            lexer->getNextToken();
+            if(lexer->last.tok_val != tok_comma){throw compiler_error("expected a comma befoce asm block",lexer->line,lexer->col);} // 与上注释相同
+            lexer->getNextToken();
+            if(lexer->last.tok_val != tok_string && lexer->last.tok_val != tok_int){throw compiler_error("expected a primary token",lexer->line,lexer->col);} // 与上注释相同
+            root.node.push_back({xast::astree("primary",lexer->last)});
+            lexer->getNextToken();
+            return root;
+        }
+    };
+
     class asm_stmt_parser{
         Lexer *lexer;
         public:
@@ -51,8 +75,8 @@ namespace xast::rule_parser{
         // 匹配一行ast语句
         xast::astree match(){
             backup_for_rollback;
-            if( lexer->last.tok_val != tok_id || ( xasm::iskeyword(lexer->last.str) == -1 && !marcos.count(lexer->last.str) ) ){failed_to_match;}
             xast::astree root;
+            if( lexer->last.tok_val != tok_id || ( xasm::iskeyword(lexer->last.str) == -1 && !xasm::marcos.count(lexer->last.str) ) ){failed_to_match;}
             if(xasm::iskeyword(lexer->last.str) != -1) root = xast::astree("asm_"+lexer->last.str,Token());
             else root = xast::astree("marco_"+lexer->last.str,Token());
 
@@ -125,12 +149,34 @@ namespace xast::rule_parser{
             return root;
         }
     };
+
+    class asm_db_size_stmt_parser{
+        Lexer *lexer;
+        public:
+        asm_db_size_stmt_parser(Lexer *lexer){this->lexer = lexer;}
+        xast::astree match(){
+            backup_for_rollback;
+            if(lexer->last.str != "_set_db_size"){failed_to_match;}
+            lexer->getNextToken();
+            if(lexer->last.tok_val != tok_sbracketl){throw compiler_error("expected a '(' befoce arguments.",lexer->line,lexer->col);} // 与上注释相同
+            lexer->getNextToken();
+            if(lexer->last.tok_val != tok_int){throw compiler_error("expected a database size",lexer->line,lexer->col);} // 与上注释相同
+            xast::astree root("asm_db_size_stmt",{xast::astree("primary",lexer->last)});
+            lexer->getNextToken();
+            return root;
+        }
+    };
+
     class asm_main_stmt_parser{
         Lexer *lexer;
         public:
         asm_main_stmt_parser(Lexer *lexer){this->lexer = lexer;}
         xast::astree match(){
             xast::astree ret;
+            ret = xast::rule_parser::asm_db_size_stmt_parser(lexer).match();
+            if(ret.matchWithRule != "") return ret;
+            ret = xast::rule_parser::asm_db_stmt_parser(lexer).match();
+            if(ret.matchWithRule != "") return ret;
             ret = xast::rule_parser::asm_marco_stmt_parser(lexer).match();
             if(ret.matchWithRule != "") return ret;
             ret = xast::rule_parser::asm_block_stmt_parser(lexer).match();

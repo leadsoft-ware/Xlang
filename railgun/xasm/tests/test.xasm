@@ -1,3 +1,7 @@
+_set_db_size(1024)
+_db(0,"Hello,World!")
+
+
 set_marco(jmp_nofx,{
     mov(reg0,__marco_param0);
     mov(reg1,regpc);

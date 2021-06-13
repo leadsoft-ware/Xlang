@@ -138,7 +138,8 @@ namespace xasm{
     }
 
     int iskeyword(std::string s){
-        if(std::find(cmdset.begin(),cmdset.end(),s) != cmdset.end()) return std::find(cmdset.begin(),cmdset.end(),s) - cmdset.begin();
+        auto i = cmdset.begin();
+        if(( i = std::find(cmdset.begin(),cmdset.end(),s)) != cmdset.end()) return i - cmdset.begin();
         else return -1;
     }
 };

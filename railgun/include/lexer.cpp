@@ -41,7 +41,7 @@ class Lexer{
         pos++;
         if(str[pos-1] == '\0'){pos--;return;}
         if(str[pos] == '\0'){return;}
-        if(str[pos] == '\n'){line++;}
+        if(str[pos] == '\n'){line++;col = 0;}
         else{col++;}
         return;
     }
