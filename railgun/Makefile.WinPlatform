@@ -1,5 +1,5 @@
-CXX := i686-w64-mingw32-g++  
-CXXFLAG := -g --static 
+CXX := g++
+CXXFLAG := -g --static
 
 Xasm: xasm/tests/xasm_test.cpp xasm/include/*
 	$(CXX) xasm/tests/xasm_test.cpp $(CXXFLAG) -o xasm/tests/xasm
@@ -7,9 +7,13 @@ Xasm: xasm/tests/xasm_test.cpp xasm/include/*
 Xlang: tests/ast_test.cpp include/*
 	$(CXX) tests/ast_test.cpp $(CXXFLAG) -o tests/xlang
 
-install: Xasm Xlang
+Xmvefdump: xmvefdump/objdump.cpp xasm/include/*
+	$(CXX) xmvefdump/objdump.cpp $(CXXFLAG) -o xmvefdump/objdump
+
+install: clean Xasm Xlang Xmvefdump
 	mv xasm/tests/xasm.exe build/
 	mv tests/xlang.exe build/
+	mv xmvefdump/objdump.exe build/
 
 clean: 
 	rm -rf ./build/xasm* ./build/xlang*

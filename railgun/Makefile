@@ -7,9 +7,13 @@ Xasm: xasm/tests/xasm_test.cpp xasm/include/*
 Xlang: tests/ast_test.cpp include/*
 	$(CXX) tests/ast_test.cpp $(CXXFLAG) -o tests/xlang
 
-install: Xasm Xlang
+Xmvefdump: xmvefdump/objdump.cpp xasm/include/*
+	$(CXX) xmvefdump/objdump.cpp $(CXXFLAG) -o xmvefdump/objdump
+
+install: clean Xasm Xlang Xmvefdump
 	mv xasm/tests/xasm build/
 	mv tests/xlang build/
+	mv xmvefdump/objdump build/
 
 clean: 
 	rm -rf ./build/xasm* ./build/xlang*

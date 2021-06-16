@@ -73,7 +73,7 @@ void with_file(){
             continue;
         }
         if(ast.matchWithRule == "asm_db_stmt"){
-            long long addr = stol(ast.node[0].tok.str);
+            long addr = stol(ast.node[0].tok.str);
             std::string &toWrite = ast.node[1].tok.str;
             xasm::content temp(0);
             if(is_number(toWrite)){
@@ -97,6 +97,24 @@ void with_file(){
         blocks.push_back(b_block);
     }
     if(flags["log_level"] == "full") sendLog(flags["log_level"],"bytecode_block all generated");
+    xasm::xmvef_file xmvef;
+    xmvef.head.license=xasm::vmexec_file_header::_gpl;
+    xmvef.head.xmvef_sign = 0x114514ff;
+    
+    std::vector<xasm::bytecode> code;
+    for(int i = 0;i < blocks.size();i++){
+        for(int j = 0;j < blocks[i].code.size();j++){
+            code.push_back(blocks[i].code[j]);
+        }
+    }
+    xmvef.head.bytecode_length = code.size();
+
+    xmvef.head.default_constant_pool_size = xasm::database.size();
+    xmvef.constant_pool = (char*)xasm::database.data();
+    xmvef.bytecode_array = (xasm::bytecode*)code.data();
+    xmvef.head.from_xlang_package_server = 0;
+    if(flags["output"] != "") xasm::create_xmvef_file((char*)flags["output"].data(),xmvef);
+    else throw compiler_error("Cannot output to file",0,0);
 }
 
 int main(int argc,const char** argv){

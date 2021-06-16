@@ -3,8 +3,8 @@ _db(0,"Hello,World!")
 
 
 set_marco(jmp_nofx,{
-    mov(reg0,__marco_param0);
-    mov(reg1,regpc);
+    mov(reg0,_marco_param0);
+    mov(reg1,reg18);
     sub(reg0,reg1);
     jmp(reg0);
 })
@@ -13,12 +13,12 @@ set_marco(call,{
     push(reg16);
     push(reg17);
     push(reg18);
-    jmp_nofx(__marco_param0);
+    jmp_nofx(_marco_param0);
 })
 
 set_marco(ret,{
     mov(reg17,0);
-    mov(reg15,__marco_param0);
+    mov(reg15,_marco_param0);
     pop(reg0,8);
     pop(reg1,8);
     pop(reg2,8);
@@ -32,5 +32,5 @@ main:{
 }
 
 entry:{
-    call(main);
+    mov(reg0,233);
 }

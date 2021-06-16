@@ -207,6 +207,7 @@ namespace xasm{
             ret.code.push_back(c);
             return ret;
         }else if(stmt.matchWithRule.substr(0,6) == "marco_"){
+            // quick setup: mei you bian li hong de can shu
             ret.merge(translateToASMStruct(marcos[stmt.matchWithRule.substr(6)]));
             // 遍历每一行语句
             for(int i = 0;i < ret.code.size();i++){
@@ -215,6 +216,8 @@ namespace xasm{
                     if(ret.code[i].main == "_marco_param" + std::to_string(j)) ret.code[i].main = stmt.node[0].node[j].tok.str;
                     // 遍历每一行语句的参数
                     for(int k = 0;k < ret.code[i].args.size();k++){
+                        //std::cout << ret.code[i].args[k] << " " << "_marco_param" << std::to_string(j) << std::endl;
+                        if(ret.code[i].args[k] != "_marco_param" + std::to_string(j)) continue;
                         if(stmt.node[0].node[j].matchWithRule == "asm_primary_pointer") ret.code[i].args[k] = "_addr_" + stmt.node[0].node[j].tok.str;
                         else ret.code[i].args[k] = stmt.node[0].node[j].tok.str;
                     }
@@ -227,8 +230,8 @@ namespace xasm{
     }
 
     //  计算从指定块开始到另一个指定块的距离
-    long long  countBytecodeBlock(std::vector<xasm::bytecode_block> &block_map,int idx_of_start = 0,int idx_of_end = INT32_MAX){
-        long long  ret = 0;
+    long  countBytecodeBlock(std::vector<xasm::bytecode_block> &block_map,int idx_of_start = 0,int idx_of_end = INT32_MAX){
+        long  ret = 0;
         for(int i = idx_of_start;i != block_map.size();i++){
             ret += block_map[i].code.size() - 1;
             if(i == idx_of_end) return ret;
@@ -251,6 +254,7 @@ namespace xasm{
             ret.code.push_back((bytecode){bytecode::_command,iskeyword(a.code[i].main)});
             for(int j = 0;j < a.code[i].args.size();j++){
                 std::string &str = a.code[i].args[j];
+                std::cout << str << std::endl;
                 // 判断是否为函数名
                 if(inBlockMap(str,block_map) != -1){
                     ret.code.push_back((bytecode){bytecode::_number,countBytecodeBlock(block_map,0,inBlockMap(str,block_map)) + 1}); // 计算块的位置并加入字节码, 加一是因为计算的是块离0的距离，还得+1
@@ -264,9 +268,13 @@ namespace xasm{
                     continue;
                 }
 
-                if(str.substr(0,3) == "reg") ret.code.push_back((bytecode){bytecode::_register,stol(str.substr(3))});
+                if(str.substr(0,3) == "reg"){
+                    ret.code.push_back((bytecode){bytecode::_register,stol(str.substr(3))});
+                }
                 else if(is_decimal(str)) ret.code.push_back((bytecode){bytecode::_number,stod(str)});
-                else if(is_number(str)) ret.code.push_back((bytecode){bytecode::_number,stol(str)});
+                else if(is_number(str)) {
+                    ret.code.push_back((bytecode){bytecode::_number,stol(str)});
+                }
                 else throw compiler_error("[unknown position] unknown argument syntax",0,0);
             }
         }

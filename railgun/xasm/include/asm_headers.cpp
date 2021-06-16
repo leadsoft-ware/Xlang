@@ -21,7 +21,8 @@ bool is_decimal(std::string str){
         if(str[i] == '.' && flag == false){flag = true;continue;}
         if(!isdigit(str[i])){return false;}
     }
-    return true;
+    if(flag) return true;
+    return false;
 }
 
 namespace xasm{
@@ -46,14 +47,13 @@ namespace xasm{
     // 进行数据操作的基本单位
     union content{
         double _dblval;
-        long long _intval;
+        long _intval;
         char _charval[8];
 
         content(long x){_intval = x;}
-        content(long long x){_intval = x;}
         content(int x){_intval = x;}
         content(double d){_dblval = d;}
-        long long &intval(){return _intval;}
+        long &intval(){return _intval;}
         double &dblval(){return _dblval;}
         char* charval(){return (char*)&_charval;}
     };
@@ -101,12 +101,12 @@ namespace xasm{
 
     // Xtime minimal virtual machine executable file -> Xmvef
     struct vmexec_file_header{
-        long long  xmvef_sign; // 验证是否为合法文件头 一般为0x114514ff
-        long long  from_xlang_package_server; // 是否是官方认证的binary
+        long  xmvef_sign; // 验证是否为合法文件头 一般为0x114514ff
+        long  from_xlang_package_server; // 是否是官方认证的binary
         char author[32]; // 作者名
         enum distribution_license{_gpl,_lgpl,_mit,_wtfpl,_apache} license; // 分发所使用的协议，默认gpl
-        long long  default_constant_pool_size;
-        long long  bytecode_length;
+        long  default_constant_pool_size;
+        long  bytecode_length;
     };
 
     struct xmvef_file{
@@ -121,19 +121,19 @@ namespace xasm{
         if(fd == -1){throw xasm_error("Cannot open Xmvef file");}
         if(read(fd,&file.head,sizeof(file.head)) == -1){throw xasm_error("Failed to read file header");}
         file.constant_pool = (char*)malloc(file.head.default_constant_pool_size);
-        file.bytecode_array = (bytecode*)malloc(file.head.bytecode_length*sizeof(bytecode));
-        if(read(fd,&file.constant_pool,sizeof(file.head.default_constant_pool_size)) == -1){throw xasm_error("Failed to read constant pool");}
-        if(read(fd,&file.bytecode_array,sizeof(file.head.bytecode_length*sizeof(bytecode))) == -1){throw xasm_error("Failed to read bytecode array");}
+        file.bytecode_array = (bytecode*)malloc(file.head.bytecode_length*sizeof(bytecode)+8);
+        if(read(fd,file.constant_pool,sizeof(file.head.default_constant_pool_size)) == -1){throw xasm_error("Failed to read constant pool");}
+        if(read(fd,file.bytecode_array,file.head.bytecode_length*sizeof(bytecode)) == -1){throw xasm_error("Failed to read bytecode array");}
         close(fd);
         return file; // 全部文件读取完成
     }
 
     void create_xmvef_file(char *path,xmvef_file file){
-        int fd = open(path,O_RDWR|O_CREAT);
+        int fd = open(path,O_RDWR|O_CREAT,777);
         if(fd == -1){throw xasm_error("Cannot open or create Xmvef file");}
         if(write(fd,&file.head,sizeof(file.head)) == -1){throw xasm_error("Failed to write file header");}
-        if(write(fd,&file.constant_pool,sizeof(file.head.default_constant_pool_size)) == -1){throw xasm_error("Failed to write constant pool");}
-        if(write(fd,&file.bytecode_array,sizeof(file.head.bytecode_length*sizeof(bytecode))) == -1){throw xasm_error("Failed to write bytecode array");}
+        if(write(fd,file.constant_pool,sizeof(file.head.default_constant_pool_size)) == -1){throw xasm_error("Failed to write constant pool");}
+        if(write(fd,file.bytecode_array,file.head.bytecode_length*sizeof(bytecode)) == -1){throw xasm_error("Failed to write bytecode array");}
         return;
     }
 
