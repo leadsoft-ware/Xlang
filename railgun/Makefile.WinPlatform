@@ -1,4 +1,4 @@
-CXX := g++
+CXX := i686-w64-mingw32-g++
 CXXFLAG := -g --static
 
 Xasm: xasm/tests/xasm_test.cpp xasm/include/*
