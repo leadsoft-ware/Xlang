@@ -16,4 +16,4 @@ install: clean Xasm Xlang Xmvefdump
 	mv xmvefdump/objdump build/
 
 clean: 
-	rm -rf ./build/xasm* ./build/xlang*
+	rm -rf ./build/xasm* ./build/xlang* ./build/objdump*
