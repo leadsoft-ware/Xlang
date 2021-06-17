@@ -230,8 +230,8 @@ namespace xasm{
     }
 
     //  计算从指定块开始到另一个指定块的距离
-    long  countBytecodeBlock(std::vector<xasm::bytecode_block> &block_map,int idx_of_start = 0,int idx_of_end = INT32_MAX){
-        long  ret = 0;
+    long long  countBytecodeBlock(std::vector<xasm::bytecode_block> &block_map,int idx_of_start = 0,int idx_of_end = INT32_MAX){
+        long long  ret = 0;
         for(int i = idx_of_start;i != block_map.size();i++){
             ret += block_map[i].code.size() - 1;
             if(i == idx_of_end) return ret;

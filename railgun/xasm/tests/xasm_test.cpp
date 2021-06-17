@@ -73,7 +73,7 @@ void with_file(){
             continue;
         }
         if(ast.matchWithRule == "asm_db_stmt"){
-            long addr = stol(ast.node[0].tok.str);
+            long long addr = stol(ast.node[0].tok.str);
             std::string &toWrite = ast.node[1].tok.str;
             xasm::content temp(0);
             if(is_number(toWrite)){

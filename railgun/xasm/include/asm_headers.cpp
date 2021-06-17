@@ -47,13 +47,14 @@ namespace xasm{
     // 进行数据操作的基本单位
     union content{
         double _dblval;
-        long _intval;
+        long long _intval;
         char _charval[8];
 
+        content(long long x){_intval = x;}
         content(long x){_intval = x;}
         content(int x){_intval = x;}
         content(double d){_dblval = d;}
-        long &intval(){return _intval;}
+        long long &intval(){return _intval;}
         double &dblval(){return _dblval;}
         char* charval(){return (char*)&_charval;}
     };
@@ -101,12 +102,12 @@ namespace xasm{
 
     // Xtime minimal virtual machine executable file -> Xmvef
     struct vmexec_file_header{
-        long  xmvef_sign; // 验证是否为合法文件头 一般为0x114514ff
-        long  from_xlang_package_server; // 是否是官方认证的binary
+        long long  xmvef_sign; // 验证是否为合法文件头 一般为0x114514ff
+        long long  from_xlang_package_server; // 是否是官方认证的binary
         char author[32]; // 作者名
         enum distribution_license{_gpl,_lgpl,_mit,_wtfpl,_apache} license; // 分发所使用的协议，默认gpl
-        long  default_constant_pool_size;
-        long  bytecode_length;
+        long long  default_constant_pool_size;
+        long long  bytecode_length;
     };
 
     struct xmvef_file{
