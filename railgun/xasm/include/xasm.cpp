@@ -232,6 +232,7 @@ namespace xasm{
     //  计算从指定块开始到另一个指定块的距离
     long long  countBytecodeBlock(std::vector<xasm::bytecode_block> &block_map,int idx_of_start = 0,int idx_of_end = INT32_MAX){
         long long  ret = 0;
+        if(idx_of_start == idx_of_end) return 0;
         for(int i = idx_of_start;i != block_map.size();i++){
             ret += block_map[i].code.size() - 1;
             if(i == idx_of_end) return ret;
@@ -257,7 +258,8 @@ namespace xasm{
                 std::cout << str << std::endl;
                 // 判断是否为函数名
                 if(inBlockMap(str,block_map) != -1){
-                    ret.code.push_back((bytecode){bytecode::_number,countBytecodeBlock(block_map,0,inBlockMap(str,block_map)) + 1}); // 计算块的位置并加入字节码, 加一是因为计算的是块离0的距离，还得+1
+                    std::cout << ":" << inBlockMap(str,block_map) << std::endl;
+                    ret.code.push_back((bytecode){bytecode::_number,(long long)xasm::database.size()+countBytecodeBlock(block_map,0,inBlockMap(str,block_map))}); // 计算块的位置并加入字节码, 加一是因为计算的是块离0的距离，还得+1
                     continue;
                 }
 
