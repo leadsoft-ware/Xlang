@@ -114,7 +114,7 @@ void with_file(){
     xmvef.head.default_constant_pool_size = xasm::database.size();
     xmvef.constant_pool = (char*)xasm::database.data();
     xmvef.bytecode_array = (xasm::bytecode*)code.data();
-    xmvef.head.start_of_pc = xasm::countBytecodeBlock(blocks,0,xasm::inBlockMap("entry",blocks));
+    xmvef.head.start_of_pc = xasm::database.size() + xasm::countBytecodeBlock(blocks,0,xasm::inBlockMap("entry",blocks));
     xmvef.head.from_xlang_package_server = 0;
 
     if(flags["output"] != "") xasm::create_xmvef_file((char*)flags["output"].data(),xmvef);

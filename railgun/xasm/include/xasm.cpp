@@ -234,8 +234,8 @@ namespace xasm{
         long long  ret = 0;
         if(idx_of_start == idx_of_end) return 0;
         for(int i = idx_of_start;i != block_map.size();i++){
-            ret += block_map[i].code.size() - 1;
             if(i == idx_of_end) return ret;
+            ret += block_map[i].code.size() - 1;
         }
         return ret;
     }
@@ -255,10 +255,10 @@ namespace xasm{
             ret.code.push_back((bytecode){bytecode::_command,iskeyword(a.code[i].main)});
             for(int j = 0;j < a.code[i].args.size();j++){
                 std::string &str = a.code[i].args[j];
-                std::cout << str << std::endl;
                 // 判断是否为函数名
                 if(inBlockMap(str,block_map) != -1){
-                    std::cout << ":" << inBlockMap(str,block_map) << std::endl;
+                    std::cout << str;
+                    std::cout << ":" << inBlockMap(str,block_map) << " " << xasm::database.size() << std::endl;
                     ret.code.push_back((bytecode){bytecode::_number,(long long)xasm::database.size()+countBytecodeBlock(block_map,0,inBlockMap(str,block_map))}); // 计算块的位置并加入字节码, 加一是因为计算的是块离0的距离，还得+1
                     continue;
                 }
