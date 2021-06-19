@@ -4,7 +4,7 @@ void dump(char* filename){
     xasm::xmvef_file xmvef = xasm::open_xmvef_file(filename);
     if(xmvef.head.xmvef_sign != 0x114514ff) return;
     std::cout << "[Xmvef File dump] filename:" << filename << "\n";
-    std::cout << "bytecode length:" << xmvef.head.bytecode_length << " database size:" << xmvef.head.default_constant_pool_size << "\n";
+    std::cout << "bytecode length:" << xmvef.head.bytecode_length << " database size:" << xmvef.head.default_constant_pool_size << " pc_start:" << xmvef.head.start_of_pc << "\n";
     std::cout << "disasm result:\n";
     for(int i = 0;i < xmvef.head.bytecode_length;i++){
         if(xmvef.bytecode_array[i].op == xasm::bytecode::_command){ std::cout << xasm::cmdset[xmvef.bytecode_array[i].c.intval()] << "(";continue;}

@@ -50,6 +50,7 @@ namespace xasm{
         long long _intval;
         char _charval[8];
 
+        content(){_intval = 0;}
         content(long long x){_intval = x;}
         content(long x){_intval = x;}
         content(int x){_intval = x;}
@@ -108,6 +109,7 @@ namespace xasm{
         enum distribution_license{_gpl,_lgpl,_mit,_wtfpl,_apache} license; // 分发所使用的协议，默认gpl
         long long  default_constant_pool_size;
         long long  bytecode_length;
+        long long  start_of_pc;
     };
 
     struct xmvef_file{
