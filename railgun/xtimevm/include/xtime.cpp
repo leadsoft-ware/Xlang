@@ -32,7 +32,7 @@ class virtual_machine{
     }
 
     bool next_command(){
-        if(this_byte() > (xasm::bytecode*)(memory + tot_mem)) return false;
+        if((char*)this_byte() > (memory + tot_mem)) return false;
         while(this_byte()->op != xasm::bytecode::_command) next();
         return true;
     }
@@ -40,6 +40,7 @@ class virtual_machine{
     virtual_machine(xasm::xmvef_file file,size_t memsize){
         if(file.head.xmvef_sign != 0x114514ff) throw vm_error("Invalid Xmvef Sign");
         memory = (char*)malloc(memsize);
+        tot_mem = memsize;
         // 初始化内存
         memcpy(memory,file.constant_pool,file.head.default_constant_pool_size);
         memcpy(memory + file.head.default_constant_pool_size,file.bytecode_array,sizeof(xasm::bytecode) * file.head.bytecode_length);
@@ -98,18 +99,20 @@ class virtual_machine{
                 else src = this_byte()->c;
                 *dest = dest->intval() | src.intval();
             }else if(xasm::cmdset[this_byte()->c.intval()] == "add" || xasm::cmdset[this_byte()->c.intval()] == "sub" || xasm::cmdset[this_byte()->c.intval()] == "mul" || xasm::cmdset[this_byte()->c.intval()] == "div" || xasm::cmdset[this_byte()->c.intval()] == "mod"){
+                int cmd = this_byte()->c.intval();
                 next();
                 xasm::content *dest = returnAddress(),src;
                 if(dest == nullptr){throw vm_error("first augument must a address or register ");}
                 next();
                 if(returnAddress() != nullptr) src = *returnAddress();
                 else src = this_byte()->c;
-                if(xasm::cmdset[this_byte()->c.intval()] == "add") *dest = dest->intval() + src.intval();
-                if(xasm::cmdset[this_byte()->c.intval()] == "sub") *dest = dest->intval() - src.intval();
-                if(xasm::cmdset[this_byte()->c.intval()] == "mul") *dest = dest->intval() * src.intval();
-                if(xasm::cmdset[this_byte()->c.intval()] == "div") *dest = dest->intval() / src.intval();
-                if(xasm::cmdset[this_byte()->c.intval()] == "mod") *dest = dest->intval() % src.intval();
+                if(xasm::cmdset[cmd] == "add") dest->intval() = dest->intval() + src.intval();
+                else if(xasm::cmdset[cmd] == "sub") dest->intval() = dest->intval() - src.intval();
+                else if(xasm::cmdset[cmd] == "mul") dest->intval() = dest->intval() * src.intval();
+                else if(xasm::cmdset[cmd] == "div") dest->intval() = dest->intval() / src.intval();
+                else if(xasm::cmdset[cmd] == "mod") dest->intval() = dest->intval() % src.intval();
             }else if(xasm::cmdset[this_byte()->c.intval()] == "_dbl_add" || xasm::cmdset[this_byte()->c.intval()] == "_dbl_sub" || xasm::cmdset[this_byte()->c.intval()] == "_dblmul" || xasm::cmdset[this_byte()->c.intval()] == "_dbl_div" || xasm::cmdset[this_byte()->c.intval()] == "_dbl_mod"){
+                int cmd = this_byte()->c.intval();
                 // 只处理小数
                 next();
                 xasm::content *dest = returnAddress(),src;
@@ -117,14 +120,15 @@ class virtual_machine{
                 next();
                 if(returnAddress() != nullptr) src = *returnAddress();
                 else src = this_byte()->c;
-                if(xasm::cmdset[this_byte()->c.intval()] == "_dbl_add") *dest = dest->dblval() + src.dblval();
-                if(xasm::cmdset[this_byte()->c.intval()] == "_dbl_sub") *dest = dest->dblval() - src.dblval();
-                if(xasm::cmdset[this_byte()->c.intval()] == "_dbl_mul") *dest = dest->dblval() * src.dblval();
-                if(xasm::cmdset[this_byte()->c.intval()] == "_dbl_div") *dest = dest->dblval() / src.dblval();
+                if(xasm::cmdset[cmd] == "_dbl_add") dest->dblval() = dest->dblval() + src.dblval();
+                if(xasm::cmdset[cmd] == "_dbl_sub") dest->dblval() = dest->dblval() - src.dblval();
+                if(xasm::cmdset[cmd] == "_dbl_mul") dest->dblval() = dest->dblval() * src.dblval();
+                if(xasm::cmdset[cmd] == "_dbl_div") dest->dblval() = dest->dblval() / src.dblval();
                 //if(xasm::cmdset[this_byte()->c.intval()] == "_dbl_mod") *dest = dest->dblval() % src.dblval();
             }else if(xasm::cmdset[this_byte()->c.intval()] == "eq" || xasm::cmdset[this_byte()->c.intval()] == "neq" || 
                      xasm::cmdset[this_byte()->c.intval()] == "maxeq" || xasm::cmdset[this_byte()->c.intval()] == "mineq" ||
                      xasm::cmdset[this_byte()->c.intval()] == "max" || xasm::cmdset[this_byte()->c.intval()] == "min"){
+                int cmd = this_byte()->c.intval();
                 next();
                 xasm::content *dest = returnAddress(),src1,src2;
                 if(dest == nullptr){throw vm_error("first augument must a address or register ");}
@@ -134,12 +138,12 @@ class virtual_machine{
                 next();
                 if(returnAddress() != nullptr) src2 = *returnAddress();
                 src2 = this_byte()->c;
-                if(xasm::cmdset[this_byte()->c.intval()] == "eq") *dest = src1.intval() == src2.intval();
-                if(xasm::cmdset[this_byte()->c.intval()] == "neq") *dest = src1.intval() != src2.intval();
-                if(xasm::cmdset[this_byte()->c.intval()] == "maxeq") *dest = src1.intval() >= src2.intval();
-                if(xasm::cmdset[this_byte()->c.intval()] == "mineq") *dest = src1.intval() <= src2.intval();
-                if(xasm::cmdset[this_byte()->c.intval()] == "max") *dest = src1.intval() > src2.intval();
-                if(xasm::cmdset[this_byte()->c.intval()] == "min") *dest = src1.intval() < src2.intval();
+                if(xasm::cmdset[cmd] == "eq") dest->intval() = src1.intval() == src2.intval();
+                if(xasm::cmdset[cmd] == "neq") dest->intval() = src1.intval() != src2.intval();
+                if(xasm::cmdset[cmd] == "maxeq") dest->intval() = src1.intval() >= src2.intval();
+                if(xasm::cmdset[cmd] == "mineq") dest->intval() = src1.intval() <= src2.intval();
+                if(xasm::cmdset[cmd] == "max") dest->intval() = src1.intval() > src2.intval();
+                if(xasm::cmdset[cmd] == "min") dest->intval() = src1.intval() < src2.intval();
             }
             if( !next_command() ) break;
         }

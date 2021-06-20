@@ -13,7 +13,7 @@ __xmvefdump: xmvefdump/objdump.cpp xasm/include/*
 __xtimevm: xtimevm/tests/xtime_test.cpp xtimevm/include/*
 	$(CXX) xtimevm/test/xtime_test.cpp $(CXXFLAG) -o xtimevm/xtimevm
 
-install: clean __xasm __xlang __xmvefdump
+install: clean __xasm __xlang __xmvefdump __xtimevm
 	mv xasm/tests/xasm.exe build/
 	mv tests/xlang.exe build/
 	mv xmvefdump/objdump.exe build/
