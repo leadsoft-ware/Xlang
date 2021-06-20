@@ -24,11 +24,11 @@ class virtual_machine{
     char* memory;int tot_mem;
 
     xasm::bytecode *this_byte(){
-        return (xasm::bytecode*)(memory + regs[regpc].intval() * sizeof(xasm::bytecode));
+        return (xasm::bytecode*)(memory + regs[regpc].intval());
     }
 
     void next(){
-        regs[regpc].intval()++;
+        regs[regpc].intval() += sizeof(xasm::bytecode);
     }
 
     bool next_command(){
@@ -46,7 +46,7 @@ class virtual_machine{
         regs[regfp] = 0;
         regs[regsp] = 0;
         regs[intt] = 0;
-        regs[regpc] = file.head.default_constant_pool_size+file.head.start_of_pc;
+        regs[regpc] = file.head.start_of_pc;
     }
 
     // 返回地址，也可能是寄存器
