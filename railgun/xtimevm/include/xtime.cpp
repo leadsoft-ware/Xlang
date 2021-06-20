@@ -34,6 +34,7 @@ class virtual_machine{
     bool next_command(){
         if(this_byte() > (xasm::bytecode*)(memory + tot_mem)) return false;
         while(this_byte()->op != xasm::bytecode::_command) next();
+        return true;
     }
     
     virtual_machine(xasm::xmvef_file file,size_t memsize){
@@ -45,7 +46,7 @@ class virtual_machine{
         regs[regfp] = 0;
         regs[regsp] = 0;
         regs[intt] = 0;
-        regs[regpc] = file.head.start_of_pc;
+        regs[regpc] = file.head.default_constant_pool_size+file.head.start_of_pc;
     }
 
     // 返回地址，也可能是寄存器
@@ -80,8 +81,67 @@ class virtual_machine{
                 next();
                 if(returnAddress() != nullptr) memcpy(dest,src,returnAddress()->intval());
                 memcpy(dest,src,this_byte()->c.intval());
+            }else if(xasm::cmdset[this_byte()->c.intval()] == "and"){
+                next();
+                xasm::content *dest = returnAddress(),src;
+                if(dest == nullptr){throw vm_error("first augument must a address or register ");}
+                next();
+                if(returnAddress() != nullptr) src = *returnAddress();
+                else src = this_byte()->c;
+                *dest = dest->intval() & src.intval();
+            }else if(xasm::cmdset[this_byte()->c.intval()] == "or"){
+                next();
+                xasm::content *dest = returnAddress(),src;
+                if(dest == nullptr){throw vm_error("first augument must a address or register ");}
+                next();
+                if(returnAddress() != nullptr) src = *returnAddress();
+                else src = this_byte()->c;
+                *dest = dest->intval() | src.intval();
+            }else if(xasm::cmdset[this_byte()->c.intval()] == "add" || xasm::cmdset[this_byte()->c.intval()] == "sub" || xasm::cmdset[this_byte()->c.intval()] == "mul" || xasm::cmdset[this_byte()->c.intval()] == "div" || xasm::cmdset[this_byte()->c.intval()] == "mod"){
+                next();
+                xasm::content *dest = returnAddress(),src;
+                if(dest == nullptr){throw vm_error("first augument must a address or register ");}
+                next();
+                if(returnAddress() != nullptr) src = *returnAddress();
+                else src = this_byte()->c;
+                if(xasm::cmdset[this_byte()->c.intval()] == "add") *dest = dest->intval() + src.intval();
+                if(xasm::cmdset[this_byte()->c.intval()] == "sub") *dest = dest->intval() - src.intval();
+                if(xasm::cmdset[this_byte()->c.intval()] == "mul") *dest = dest->intval() * src.intval();
+                if(xasm::cmdset[this_byte()->c.intval()] == "div") *dest = dest->intval() / src.intval();
+                if(xasm::cmdset[this_byte()->c.intval()] == "mod") *dest = dest->intval() % src.intval();
+            }else if(xasm::cmdset[this_byte()->c.intval()] == "_dbl_add" || xasm::cmdset[this_byte()->c.intval()] == "_dbl_sub" || xasm::cmdset[this_byte()->c.intval()] == "_dblmul" || xasm::cmdset[this_byte()->c.intval()] == "_dbl_div" || xasm::cmdset[this_byte()->c.intval()] == "_dbl_mod"){
+                // 只处理小数
+                next();
+                xasm::content *dest = returnAddress(),src;
+                if(dest == nullptr){throw vm_error("first augument must a address or register ");}
+                next();
+                if(returnAddress() != nullptr) src = *returnAddress();
+                else src = this_byte()->c;
+                if(xasm::cmdset[this_byte()->c.intval()] == "_dbl_add") *dest = dest->dblval() + src.dblval();
+                if(xasm::cmdset[this_byte()->c.intval()] == "_dbl_sub") *dest = dest->dblval() - src.dblval();
+                if(xasm::cmdset[this_byte()->c.intval()] == "_dbl_mul") *dest = dest->dblval() * src.dblval();
+                if(xasm::cmdset[this_byte()->c.intval()] == "_dbl_div") *dest = dest->dblval() / src.dblval();
+                //if(xasm::cmdset[this_byte()->c.intval()] == "_dbl_mod") *dest = dest->dblval() % src.dblval();
+            }else if(xasm::cmdset[this_byte()->c.intval()] == "eq" || xasm::cmdset[this_byte()->c.intval()] == "neq" || 
+                     xasm::cmdset[this_byte()->c.intval()] == "maxeq" || xasm::cmdset[this_byte()->c.intval()] == "mineq" ||
+                     xasm::cmdset[this_byte()->c.intval()] == "max" || xasm::cmdset[this_byte()->c.intval()] == "min"){
+                next();
+                xasm::content *dest = returnAddress(),src1,src2;
+                if(dest == nullptr){throw vm_error("first augument must a address or register ");}
+                next();
+                if(returnAddress() != nullptr) src1 = *returnAddress();
+                src1 = this_byte()->c;
+                next();
+                if(returnAddress() != nullptr) src2 = *returnAddress();
+                src2 = this_byte()->c;
+                if(xasm::cmdset[this_byte()->c.intval()] == "eq") *dest = src1.intval() == src2.intval();
+                if(xasm::cmdset[this_byte()->c.intval()] == "neq") *dest = src1.intval() != src2.intval();
+                if(xasm::cmdset[this_byte()->c.intval()] == "maxeq") *dest = src1.intval() >= src2.intval();
+                if(xasm::cmdset[this_byte()->c.intval()] == "mineq") *dest = src1.intval() <= src2.intval();
+                if(xasm::cmdset[this_byte()->c.intval()] == "max") *dest = src1.intval() > src2.intval();
+                if(xasm::cmdset[this_byte()->c.intval()] == "min") *dest = src1.intval() < src2.intval();
             }
-            next_command();
+            if( !next_command() ) break;
         }
     }
 };

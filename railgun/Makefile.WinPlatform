@@ -10,10 +10,14 @@ __xlang: tests/ast_test.cpp include/*
 __xmvefdump: xmvefdump/objdump.cpp xasm/include/*
 	$(CXX) xmvefdump/objdump.cpp $(CXXFLAG) -o xmvefdump/objdump
 
+__xtimevm: xtimevm/tests/xtime_test.cpp xtimevm/include/*
+	$(CXX) xtimevm/test/xtime_test.cpp $(CXXFLAG) -o xtimevm/xtimevm
+
 install: clean __xasm __xlang __xmvefdump
 	mv xasm/tests/xasm.exe build/
 	mv tests/xlang.exe build/
 	mv xmvefdump/objdump.exe build/
+	mv xtimevm/xtimevm.exe build/
 
 clean: 
-	rm -rf ./build/xasm* ./build/xlang* ./build/objdump*
+	rm -rf ./build/xasm* ./build/xlang* ./build/objdump* ./build/xtime*
