@@ -65,9 +65,11 @@ class virtual_machine{
     void start(){
         while(true){
             //xasm::bytecode* thisbyte = (xasm::bytecode*)( memory + (regs[regpc].intval() * sizeof(xasm::bytecode)) );
+            if(this_byte()->op == xasm::bytecode::_command){ std::cout << xasm::cmdset[this_byte()->c.intval()] << "(";}
+            
             if(this_byte()->op != xasm::bytecode::_command) throw vm_error("Not a command sign");
             if(xasm::cmdset[this_byte()->c.intval()] == "mov"){
-                next(); // 移动pc
+                next(); // 移动pc 
                 xasm::content *dest = returnAddress(),src;
                 next();
                 src = ( returnAddress() != nullptr) ? *returnAddress() : this_byte()->c;

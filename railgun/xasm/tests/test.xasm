@@ -11,7 +11,7 @@ set_marco(jmp_nofx,{
 
 set_marco(hlt,{
     mov(reg14,reg18);
-    sub(reg14,16);
+    sub(reg14,64);
     mov(reg18,reg14);
 })
 
@@ -36,7 +36,6 @@ set_marco(ret,{
 entry:{
     mov(reg0,1);
     mov(reg1,1);
-    add(reg0,reg1);
-    mov(reg18,reg18);
+    sub(reg0,reg1);
     hlt();
 }
