@@ -125,7 +125,7 @@ namespace xasm{
         if(read(fd,&file.head,sizeof(file.head)) == -1){throw xasm_error("Failed to read file header");}
         file.constant_pool = (char*)malloc(file.head.default_constant_pool_size);
         file.bytecode_array = (bytecode*)malloc(file.head.bytecode_length*sizeof(bytecode)+8);
-        if(read(fd,file.constant_pool,sizeof(file.head.default_constant_pool_size)) == -1){throw xasm_error("Failed to read constant pool");}
+        if(read(fd,file.constant_pool,file.head.default_constant_pool_size) == -1){throw xasm_error("Failed to read constant pool");}
         if(read(fd,file.bytecode_array,file.head.bytecode_length*sizeof(bytecode)) == -1){throw xasm_error("Failed to read bytecode array");}
         close(fd);
         return file; // 全部文件读取完成
@@ -135,7 +135,7 @@ namespace xasm{
         int fd = open(path,O_RDWR|O_CREAT,777);
         if(fd == -1){throw xasm_error("Cannot open or create Xmvef file");}
         if(write(fd,&file.head,sizeof(file.head)) == -1){throw xasm_error("Failed to write file header");}
-        if(write(fd,file.constant_pool,sizeof(file.head.default_constant_pool_size)) == -1){throw xasm_error("Failed to write constant pool");}
+        if(write(fd,file.constant_pool,file.head.default_constant_pool_size) == -1){throw xasm_error("Failed to write constant pool");}
         if(write(fd,file.bytecode_array,file.head.bytecode_length*sizeof(bytecode)) == -1){throw xasm_error("Failed to write bytecode array");}
         return;
     }
