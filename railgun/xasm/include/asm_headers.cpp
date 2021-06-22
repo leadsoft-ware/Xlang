@@ -40,8 +40,7 @@ namespace xasm{
         "eq","neq","maxeq","mineq","max","min","_itd","_dti", // 两个命令用于小数与整数互换
         "_dbl_add","_dbl_mul","_dbl_div", // double command set
         "_dbl_eq","_dbl_neq","_dbl_maxeq","_dbl_mineq","_dbl_max","_dbl_min",
-        "jmp","mov","mov_m","mov1b","push","pop","save","restore", // mov1b target,val,pos[0-7]
-        "jt","jf", // jt/jf val 如果指定val为真或假，则跳转到相应地方
+        "mov","mov_m","mov1b","push","pop","save","restore", // mov1b target,val,pos[0-7]
     };
 
     // 进行数据操作的基本单位

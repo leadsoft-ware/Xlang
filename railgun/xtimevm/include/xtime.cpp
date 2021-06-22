@@ -62,6 +62,10 @@ class virtual_machine{
         return nullptr;
     }
 
+    long long getStackRealAddress(){
+        return tot_mem - regs[regfp].intval() - regs[regsp].intval();
+    }
+
     void start(){
         while(true){
             //xasm::bytecode* thisbyte = (xasm::bytecode*)( memory + (regs[regpc].intval() * sizeof(xasm::bytecode)) );
@@ -146,6 +150,41 @@ class virtual_machine{
                 if(xasm::cmdset[cmd] == "mineq") dest->intval() = src1.intval() <= src2.intval();
                 if(xasm::cmdset[cmd] == "max") dest->intval() = src1.intval() > src2.intval();
                 if(xasm::cmdset[cmd] == "min") dest->intval() = src1.intval() < src2.intval();
+            }else if(xasm::cmdset[this_byte()->c.intval()] == "_itd" || xasm::cmdset[this_byte()->c.intval()] == "_dti"){
+                int cmd = this_byte()->c.intval();
+                next();
+                xasm::content *dest = returnAddress();
+                if(dest == nullptr){throw vm_error("first augument must a address or register");}
+                if(xasm::cmdset[cmd] == "_itd") dest->dblval() = dest->intval();
+                else dest->intval() = dest->dblval();
+            }else if(xasm::cmdset[this_byte()->c.intval()] == "mov1b"){
+                next();
+                xasm::content *dest = returnAddress(),src;
+                if(dest == nullptr){throw vm_error("first augument must a address or register");}
+                next();
+                if(returnAddress() != nullptr){src = *returnAddress();}
+                else src = this_byte()->c;
+                next();
+                char getbit = this_byte()->c.intval();
+                dest->intval() = src.charval()[getbit];
+            }else if(xasm::cmdset[this_byte()->c.intval()] == "push" || xasm::cmdset[this_byte()->c.intval()] == "pop"){
+                int cmd = this_byte()->c.intval();
+                next();
+                xasm::content dest1,*dest = returnAddress(),size;
+                if(dest == nullptr) dest1 = this_byte()->c;
+                next();
+                if(returnAddress() != nullptr){size = *returnAddress();}
+                else size = this_byte()->c;
+                if(xasm::cmdset[cmd] == "push"){
+                    if(dest == nullptr){
+                        regs[regsp].intval() += 8;
+                        *((xasm::content*)(memory + getStackRealAddress())) = dest1;
+                    }else{
+                        for(int i = 0;i < size.intval();i++){
+                            (memory + getStackRealAddress())[i] = dest->charval()[i];
+                        }
+                    }
+                }
             }
             if( !next_command() ) break;
         }
