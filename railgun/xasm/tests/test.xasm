@@ -6,7 +6,8 @@ set_marco(jmp_nofx,{
     mov(reg0,_marco_param0);
     mov(reg1,reg18);
     sub(reg0,reg1);
-    jmp(reg0);
+    sub(reg0,16);
+    add(reg18,reg0);
 })
 
 set_marco(hlt,{
@@ -35,7 +36,8 @@ set_marco(ret,{
 
 entry:{
     mov(reg0,1);
-    mov(reg1,1);
-    sub(reg0,reg1);
-    hlt();
+    add(reg0,232);
+    push(reg0,8);
+    pop(reg1,8);
+    mov(reg2,*reg1);
 }

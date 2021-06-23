@@ -180,10 +180,15 @@ class virtual_machine{
                         regs[regsp].intval() += 8;
                         *((xasm::content*)(memory + getStackRealAddress())) = dest1;
                     }else{
+                        regs[regsp].intval() += size.intval();
                         for(int i = 0;i < size.intval();i++){
                             (memory + getStackRealAddress())[i] = dest->charval()[i];
                         }
                     }
+                }else{
+                    if(dest == nullptr){throw vm_error("pop command return a data address");}
+                    dest->intval() = getStackRealAddress();
+                    regs[regsp].intval() -= size.intval();
                 }
             }
             if( !next_command() ) break;
