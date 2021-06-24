@@ -38,6 +38,10 @@ entry:{
     mov(reg0,1);
     add(reg0,232);
     push(reg0,8);
+    push(114514,8);
     pop(reg1,8);
-    mov(reg2,*reg1);
+    pop(reg2,8);
+    mov(reg3,*reg1);
+    mov(reg4,*reg2);
+    hlt();
 }

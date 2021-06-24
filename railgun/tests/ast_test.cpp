@@ -1,6 +1,7 @@
 #include "../include/xast.cpp"
 #include <map>
 #include <iomanip>
+#include <time.h>
 using namespace std;
 map<string,string> flags;
 
@@ -39,8 +40,20 @@ void with_file(){
 
 }
 
+std::string getBuildTime(){
+    stringstream ss;
+    time_t tt;
+    ss << __xlang_build;
+    ss >> tt;
+    char result[50];
+    struct tm * timeSet = gmtime(&tt);
+
+    strftime(result,50, "%Y-%m-%d", timeSet);
+    return result;
+}
+
 int main(int argc,const char** argv){
-    cout << "[Xlang] Version " << __xlang_version << " build " << __xlang_build << "\n";
+    cout << "[Xlang] Version " << __xlang_version << " build_time " << getBuildTime() << "\n";
     #ifdef __xlang_insider
     cout << "Insider Preview: This product is not for personal users. Many features are not complete in this version." << endl;
     #endif

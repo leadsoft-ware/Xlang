@@ -18,17 +18,24 @@
 #define regpc 18
 #define intt  19 // 中断表
 
+
+// Xtime virt: 与主虚拟机隔离的虚拟机（套娃）
+struct virt_task{
+    xasm::content base; // 内存基址
+    xasm::content regs[20];
+};
+
 class virtual_machine{
     public:
-    xasm::content regs[20];
+    virt_task *main_task;
     char* memory;int tot_mem;
 
     xasm::bytecode *this_byte(){
-        return (xasm::bytecode*)(memory + regs[regpc].intval());
+        return (xasm::bytecode*)(memory + main_task->regs[regpc].intval());
     }
 
     void next(){
-        regs[regpc].intval() += sizeof(xasm::bytecode);
+        main_task->regs[regpc].intval() += sizeof(xasm::bytecode);
     }
 
     bool next_command(){
@@ -44,10 +51,11 @@ class virtual_machine{
         // 初始化内存
         memcpy(memory,file.constant_pool,file.head.default_constant_pool_size);
         memcpy(memory + file.head.default_constant_pool_size,file.bytecode_array,sizeof(xasm::bytecode) * file.head.bytecode_length);
-        regs[regfp] = 0;
-        regs[regsp] = 0;
-        regs[intt] = 0;
-        regs[regpc] = file.head.start_of_pc;
+        main_task = (virt_task*)(memory + file.head.default_constant_pool_size+sizeof(xasm::bytecode) * file.head.bytecode_length);
+        main_task->regs[regfp] = 0;
+        main_task->regs[regsp] = 0;
+        main_task->regs[intt] = 0;
+        main_task->regs[regpc] = file.head.start_of_pc;
     }
 
     // 返回地址，也可能是寄存器
@@ -55,21 +63,21 @@ class virtual_machine{
         if(this_byte()->op == xasm::bytecode::_address){
             return (xasm::content*)(memory + this_byte()->c.intval());
         }else if(this_byte()->op == xasm::bytecode::_addr_register){
-            return (xasm::content*)(memory + regs[this_byte()->c.intval()].intval());
+            return (xasm::content*)(memory + main_task->regs[this_byte()->c.intval()].intval());
         }else if(this_byte()->op == xasm::bytecode::_register){
-            return &regs[this_byte()->c.intval()];
+            return &main_task->regs[this_byte()->c.intval()];
         }
         return nullptr;
     }
 
     long long getStackRealAddress(){
-        return tot_mem - regs[regfp].intval() - regs[regsp].intval();
+        return tot_mem - main_task->regs[regfp].intval() - main_task->regs[regsp].intval();
     }
 
     void start(){
         while(true){
             //xasm::bytecode* thisbyte = (xasm::bytecode*)( memory + (regs[regpc].intval() * sizeof(xasm::bytecode)) );
-            if(this_byte()->op == xasm::bytecode::_command){ std::cout << xasm::cmdset[this_byte()->c.intval()] << "(";}
+            //if(this_byte()->op == xasm::bytecode::_command){ std::cout << xasm::cmdset[this_byte()->c.intval()] << "(";}
             
             if(this_byte()->op != xasm::bytecode::_command) throw vm_error("Not a command sign");
             if(xasm::cmdset[this_byte()->c.intval()] == "mov"){
@@ -177,10 +185,10 @@ class virtual_machine{
                 else size = this_byte()->c;
                 if(xasm::cmdset[cmd] == "push"){
                     if(dest == nullptr){
-                        regs[regsp].intval() += 8;
+                        main_task->regs[regsp].intval() += 8;
                         *((xasm::content*)(memory + getStackRealAddress())) = dest1;
                     }else{
-                        regs[regsp].intval() += size.intval();
+                        main_task->regs[regsp].intval() += size.intval();
                         for(int i = 0;i < size.intval();i++){
                             (memory + getStackRealAddress())[i] = dest->charval()[i];
                         }
@@ -188,7 +196,7 @@ class virtual_machine{
                 }else{
                     if(dest == nullptr){throw vm_error("pop command return a data address");}
                     dest->intval() = getStackRealAddress();
-                    regs[regsp].intval() -= size.intval();
+                    main_task->regs[regsp].intval() -= size.intval();
                 }
             }
             if( !next_command() ) break;

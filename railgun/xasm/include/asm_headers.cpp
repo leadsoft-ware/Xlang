@@ -41,6 +41,7 @@ namespace xasm{
         "_dbl_add","_dbl_mul","_dbl_div", // double command set
         "_dbl_eq","_dbl_neq","_dbl_maxeq","_dbl_mineq","_dbl_max","_dbl_min",
         "mov","mov_m","mov1b","push","pop","save","restore", // mov1b target,val,pos[0-7]
+        "_virt_fork","_virt_switch", // virtualization command set, main virt task is in db_size+program_size
     };
 
     // 进行数据操作的基本单位

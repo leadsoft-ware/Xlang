@@ -2,6 +2,7 @@
 #include <sys/stat.h>
 #include <map>
 #include <iomanip>
+#include <time.h>
 using namespace std;
 map<string,string> flags;
 
@@ -121,8 +122,20 @@ void with_file(){
     else throw compiler_error("Cannot output to file",0,0);
 }
 
+std::string getBuildTime(){
+    stringstream ss;
+    time_t tt;
+    ss << __xlang_build;
+    ss >> tt;
+    char result[50];
+    struct tm * timeSet = gmtime(&tt);
+
+    strftime(result,50, "%Y-%m-%d", timeSet);
+    return result;
+}
+
 int main(int argc,const char** argv){
-    cout << "[Xasm] Version " << __xlang_version << " build " << __xlang_build << "\n";
+    cout << "[Xasm] Version " << __xlang_version << " build " << getBuildTime() << "\n";
     #ifdef __xlang_insider
     cout << "Insider Preview: This product is not for personal users. Many features are not complete in this version." << endl;
     #endif
