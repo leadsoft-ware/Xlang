@@ -115,6 +115,14 @@ class Lexer{
             return last;
         }else if(str[pos] == '/'){
             next();
+            if(str[pos] == '/'){
+                while(str[pos] != '\n') next();
+                return getNextToken();
+            }
+            if(str[pos] == '*'){
+                while(str[pos-1] != '*' && str[pos] != '/') next();
+                return getNextToken();
+            }
             if(str[pos] == '='){next();last = Token(tok_divwith,"/=");return last;}
             last = Token(tok_div,"/");
             return last;

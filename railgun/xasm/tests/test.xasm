@@ -24,7 +24,7 @@ set_marco(call,{
 })
 
 set_marco(ret,{
-    mov(reg17,0);
+    mov(reg17,0); // reset sp to zero
     mov(reg15,_marco_param0);
     pop(reg0,8);
     pop(reg1,8);
