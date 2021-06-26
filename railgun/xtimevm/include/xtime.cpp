@@ -80,6 +80,15 @@ class virtual_machine{
             //if(this_byte()->op == xasm::bytecode::_command){ std::cout << xasm::cmdset[this_byte()->c.intval()] << "(";}
             
             if(this_byte()->op != xasm::bytecode::_command) throw vm_error("Not a command sign");
+            std::cout << xasm::cmdset[this_byte()->c.intval()] << " ";
+            for(int i =1;( main_task->regs[18].intval() < tot_mem ) && ( (this_byte() + i)->op != xasm::bytecode::_command );i++){
+                if((this_byte()+i)->op == xasm::bytecode::_addr_register) std::cout << "*reg" << (this_byte()+i)->c.intval() ;
+                if((this_byte()+i)->op == xasm::bytecode::_address) std::cout << "*" << (this_byte()+i)->c.intval() ;
+                if((this_byte()+i)->op == xasm::bytecode::_number) std::cout << (this_byte()+i)->c.intval() ;
+                if((this_byte()+i)->op == xasm::bytecode::_register) std::cout << "reg" << (this_byte()+i)->c.intval() ;
+                std::cout << ",";
+            }
+            std::cout << "\b;\n";
             if(xasm::cmdset[this_byte()->c.intval()] == "mov"){
                 next(); // 移动pc 
                 xasm::content *dest = returnAddress(),src;
