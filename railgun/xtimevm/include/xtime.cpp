@@ -22,6 +22,7 @@
 // Xtime virt: 与主虚拟机隔离的虚拟机（套娃）
 struct virt_task{
     xasm::content base; // 内存基址
+    xasm::content total_memory;
     xasm::content regs[20];
 };
 
@@ -31,7 +32,7 @@ class virtual_machine{
     char* memory;int tot_mem;
 
     xasm::bytecode *this_byte(){
-        return (xasm::bytecode*)(memory + main_task->regs[regpc].intval());
+        return (xasm::bytecode*)(memory + main_task->base.intval() + main_task->regs[regpc].intval());
     }
 
     void next(){
@@ -39,7 +40,7 @@ class virtual_machine{
     }
 
     bool next_command(){
-        if((char*)this_byte() > (memory + tot_mem)) return false;
+        if((char*)this_byte() > (memory + main_task->total_memory.intval())) return false;
         while(this_byte()->op != xasm::bytecode::_command) next();
         return true;
     }
@@ -56,14 +57,16 @@ class virtual_machine{
         main_task->regs[regsp] = 0;
         main_task->regs[intt] = 0;
         main_task->regs[regpc] = file.head.start_of_pc;
+        main_task->base.intval() = 0;
+        main_task->total_memory.intval() = tot_mem;
     }
 
     // 返回地址，也可能是寄存器
     xasm::content* returnAddress(){
         if(this_byte()->op == xasm::bytecode::_address){
-            return (xasm::content*)(memory + this_byte()->c.intval());
+            return (xasm::content*)(memory + main_task->base.intval() + this_byte()->c.intval());
         }else if(this_byte()->op == xasm::bytecode::_addr_register){
-            return (xasm::content*)(memory + main_task->regs[this_byte()->c.intval()].intval());
+            return (xasm::content*)(memory + main_task->base.intval() + main_task->regs[this_byte()->c.intval()].intval());
         }else if(this_byte()->op == xasm::bytecode::_register){
             return &main_task->regs[this_byte()->c.intval()];
         }
@@ -71,7 +74,7 @@ class virtual_machine{
     }
 
     long long getStackRealAddress(){
-        return tot_mem - main_task->regs[regfp].intval() - main_task->regs[regsp].intval();
+        return main_task->total_memory.intval() - main_task->regs[regfp].intval() - main_task->regs[regsp].intval();
     }
 
     void start(){
@@ -81,7 +84,7 @@ class virtual_machine{
             
             if(this_byte()->op != xasm::bytecode::_command) throw vm_error("Not a command sign");
             std::cout << xasm::cmdset[this_byte()->c.intval()] << " ";
-            for(int i =1;( main_task->regs[18].intval() < tot_mem ) && ( (this_byte() + i)->op != xasm::bytecode::_command );i++){
+            for(int i =1;( main_task->regs[18].intval() < main_task->total_memory.intval() ) && ( (this_byte() + i)->op != xasm::bytecode::_command );i++){
                 if((this_byte()+i)->op == xasm::bytecode::_addr_register) std::cout << "*reg" << (this_byte()+i)->c.intval() ;
                 if((this_byte()+i)->op == xasm::bytecode::_address) std::cout << "*" << (this_byte()+i)->c.intval() ;
                 if((this_byte()+i)->op == xasm::bytecode::_number) std::cout << (this_byte()+i)->c.intval() ;
@@ -195,16 +198,16 @@ class virtual_machine{
                 if(xasm::cmdset[cmd] == "push"){
                     if(dest == nullptr){
                         main_task->regs[regsp].intval() += 8;
-                        *((xasm::content*)(memory + getStackRealAddress())) = dest1;
+                        *((xasm::content*)(memory + main_task->base.intval() + getStackRealAddress())) = dest1;
                     }else{
                         main_task->regs[regsp].intval() += size.intval();
                         for(int i = 0;i < size.intval();i++){
-                            (memory + getStackRealAddress())[i] = dest->charval()[i];
+                            (memory + main_task->base.intval() + getStackRealAddress())[i] = dest->charval()[i];
                         }
                     }
                 }else{
                     if(dest == nullptr){throw vm_error("pop command return a data address");}
-                    dest->intval() = getStackRealAddress();
+                    dest->intval() = getStackRealAddress(); // 因为只给地址，所以不用太在意加上base
                     main_task->regs[regsp].intval() -= size.intval();
                 }
             }
