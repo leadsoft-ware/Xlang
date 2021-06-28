@@ -183,3 +183,12 @@ void virtual_machine::start(){
         if( !next_command() ) break;
     }
 }
+
+void device_plug_in(char* path){
+    device_handle[tot_dev_cnt++] = dlopen(path,RTLD_LAZY);
+    if(device_handle[tot_dev_cnt-1] == nullptr) throw vm_error("device not currently loaded.");
+    port[tot_dev_cnt-1].connect = (_dconnect)dlsym(device_handle[tot_dev_cnt-1],"connect");
+    port[tot_dev_cnt-1].input = (_dinput)dlsym(device_handle[tot_dev_cnt-1],"input");
+    port[tot_dev_cnt-1].output = (_doutput)dlsym(device_handle[tot_dev_cnt-1],"output");
+    if(port[tot_dev_cnt-1].connect == nullptr || port[tot_dev_cnt-1].input == nullptr || port[tot_dev_cnt-1].output == nullptr) throw vm_error("device not currently loaded.");
+}

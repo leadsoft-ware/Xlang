@@ -1,5 +1,5 @@
 CXX := g++
-CXXFLAG := -g
+CXXFLAG := -g -ldl
 CXXFLAGS := -g
 
 Xasm: xasm/tests/xasm_test.cpp xasm/include/*

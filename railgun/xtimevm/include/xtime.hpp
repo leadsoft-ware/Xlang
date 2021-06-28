@@ -1,5 +1,6 @@
 #include "../../xasm/include/xasm.cpp"
 #include "error.cpp"
+
 #include <cstdlib>
 #include <cstring>
 #define __WITH_DEVICES
@@ -31,21 +32,27 @@ class virtual_machine{
 };
 
 
+#ifdef __WITH_DEVICES
+
+#include "dlfcn.h"
+
 /*
 0号设备暂定为虚拟机，通过out(0,1)来关机
 */
 
-// Xtime Standard Device Message Format
-enum msgreq_type{_r_register,_w_register};
-struct Xsdmf{
-    char msgreq;
-    xasm::content c;
-};
+typedef void(* _dconnect)(virtual_machine*);
+typedef void(* _dinput)(char*); // 从设备获取输入
+typedef void(* _doutput)(char*); // 输出到设备
 
 struct device{
-    xasm::content device_id;
-    void *connect;  // function pointer connect(void* input_pipe)
-    void *output_pipe;  // device_bridge(char* msg)
-} port[0xff];
+    xasm::content devid;
+    _dconnect connect;
+    _dinput input;
+    _doutput output;
+}port[0xff];
+void* device_handle[0xff];
+int tot_dev_cnt;
 
-void* input_pipe(char* msg);
+void device_plug_in(char* path);
+
+#endif

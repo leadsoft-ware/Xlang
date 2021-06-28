@@ -27,7 +27,7 @@ std::string TOK_DESP[] = {
 struct Token{
     TOK_VALUE tok_val;
     std::string str;
-    Token(TOK_VALUE tokval,std::string str){this->tok_val = tokval;this->str = str;}
+    Token(TOK_VALUE tokval,std::string str) : tok_val(tokval) , str(str){ }
     Token(){} // for class init
     std::string toString(){return TOK_DESP[tok_val]+":"+str;}
 };
@@ -170,8 +170,7 @@ class Lexer{
             throw compiler_error(std::string("Unexpected Token") + str[pos],line,col);
         }
     }
-    Lexer(std::string str){
-        this->str = str;
+    Lexer(std::string str) : str(str){
         line = col = pos = 0;
     }
 };
