@@ -24,8 +24,8 @@ set_marco(ret,{
 })
 
 main:{
-    pop(reg1);
-    mov(reg0,*reg1);
+    mov(reg0,1.2233);
+    _virt_get(reg0);
     ret(reg0);
 }
 

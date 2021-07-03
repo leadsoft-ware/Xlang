@@ -25,6 +25,7 @@ class virtual_machine{
     xasm::bytecode *this_byte();
     void next();
     bool next_command();
+    bool check_cmd(std::string current,long s = -1);
     virtual_machine(xasm::xmvef_file file,size_t memsize);
     xasm::content* returnAddress();
     long long getStackRealAddress();
