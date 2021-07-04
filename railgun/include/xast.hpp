@@ -137,6 +137,12 @@ namespace xast{
             normal_stmt_parser(Lexer *lexer);
             astree match(); // 不匹配返回空树
         };
+        class import_stmt_parser{
+            Lexer *lexer;
+            public:
+            import_stmt_parser(Lexer *lexer);
+            astree match();
+        };
         class statement_parser{
             Lexer *lexer;
             public:

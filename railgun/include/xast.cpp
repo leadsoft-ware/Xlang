@@ -84,6 +84,8 @@ xast::rule_parser::function_def_stmt_parser::function_def_stmt_parser(Lexer *lex
 
 xast::rule_parser::block_parser::block_parser(Lexer *lexer){this->lexer = lexer;}
 
+xast::rule_parser::import_stmt_parser::import_stmt_parser(Lexer *lexer){this->lexer = lexer;}
+
 xast::rule_parser::if_stmt_parser::if_stmt_parser(Lexer *lexer){this->lexer = lexer;}
 
 xast::rule_parser::for_stmt_parser::for_stmt_parser(Lexer *lexer){this->lexer = lexer;}
@@ -329,6 +331,24 @@ xast::astree xast::rule_parser::block_parser::match(){
     return root;
 }
 
+// match function must before function call statement match function
+xast::astree xast::rule_parser::import_stmt_parser::match(){
+    backup_for_rollback;
+    xast::astree ast("import_stmt",Token());
+    if(lexer->last.tok_val != tok_id || lexer->last.str != "import"){failed_to_match;}
+    lexer->getNextToken();
+    if(lexer->last.tok_val == tok_semicolon){throw compiler_error("bad import statement syntax.",lexer->line,lexer->col);}
+    ast.node.push_back(xast::rule_parser::rightexpr_parser(lexer).match());
+    if(ast.node[ast.node.size()-1].matchWithRule != "rightexpr"){throw compiler_error("bad import statement syntax.",lexer->line,lexer->col);}
+    while(lexer->last.tok_val == tok_comma){
+        if(ast.node[ast.node.size()-1].matchWithRule != "rightexpr"){throw compiler_error("bad import statement syntax.",lexer->line,lexer->col);}
+        lexer->getNextToken();
+        xast::astree newer = xast::rule_parser::rightexpr_parser(lexer).match();
+        ast.node.push_back(newer);
+    }
+    return ast;
+}
+
 xast::astree xast::rule_parser::if_stmt_parser::match(){
     backup_for_rollback; // must backup
     if(lexer->last.tok_val != tok_id || lexer->last.str != "if"){failed_to_match;}
@@ -432,6 +452,8 @@ xast::astree xast::rule_parser::normal_stmt_parser::match(){
 // 因为blockstatement的解析，所以statement并不需要semicolon的解析
 xast::astree xast::rule_parser::statement_parser::match(){
     xast::astree current;
+    current = xast::rule_parser::import_stmt_parser(lexer).match();
+    if(current.matchWithRule != "") return current;
     current = xast::rule_parser::if_stmt_parser(lexer).match();
     if(current.matchWithRule != "") return current;
     current = xast::rule_parser::while_stmt_parser(lexer).match();
