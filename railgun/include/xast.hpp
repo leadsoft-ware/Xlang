@@ -2,6 +2,8 @@
  Desscription:
  this is the parser and ast library of xlang, product by xiaokang00010
 */
+#pragma once
+
 #include "lexer.cpp"
 
 #include <vector>

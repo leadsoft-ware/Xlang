@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../../include/xast.cpp"
 #include "asm_headers.cpp"
 #include <map>
@@ -173,6 +175,8 @@ namespace xast::rule_parser{
         asm_main_stmt_parser(Lexer *lexer){this->lexer = lexer;}
         xast::astree match(){
             xast::astree ret;
+            ret = xast::rule_parser::import_stmt_parser(lexer).match();
+            if(ret.matchWithRule != "") return ret;
             ret = xast::rule_parser::asm_db_size_stmt_parser(lexer).match();
             if(ret.matchWithRule != "") return ret;
             ret = xast::rule_parser::asm_db_stmt_parser(lexer).match();
