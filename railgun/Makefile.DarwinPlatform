@@ -1,0 +1,38 @@
+CXX := g++
+CXXFLAG := -g -ldl -std=c++2a
+CXXFLAGS := -g -std=c++2a
+
+init:
+	@echo "======[Xlang Darwin Env Init]======"
+	@echo "Please make sure you are have brew "
+	@echo "package manager.We're getting ready"
+	@echo "for you.Please wait..."
+	brew update
+	brew install gcc
+	@echo "Success"
+
+__Xasm: xasm/tests/xasm_test.cpp xasm/include/*
+	$(CXX) xasm/tests/xasm_test.cpp $(CXXFLAG) -o xasm/tests/xasm
+
+__Xlang: tests/ast_test.cpp include/*
+	$(CXX) tests/ast_test.cpp $(CXXFLAG) -o tests/xlang
+
+__Xmvefdump: xmvefdump/objdump.cpp xasm/include/*
+	$(CXX) xmvefdump/objdump.cpp $(CXXFLAG) -o xmvefdump/objdump
+
+__XtimeVM: xtimevm/tests/xtime_test.cpp xtimevm/include/*
+	$(CXX) xtimevm/tests/xtime_test.cpp $(CXXFLAG) -o xtimevm/xtimevm
+
+refresh: refresh_version
+	./refresh_version fast
+
+install: clean __Xasm __Xlang __Xmvefdump __XtimeVM
+	mv xasm/tests/xasm build/
+	mv tests/xlang build/
+	mv xmvefdump/objdump build/
+	mv xtimevm/xtimevm build/
+
+quick: refresh install
+
+clean: 
+	rm -rf ./build/xasm* ./build/xlang* ./build/objdump* ./build/xtime* ./refresh_version

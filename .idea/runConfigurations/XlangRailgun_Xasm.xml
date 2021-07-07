@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="XlangRailgun-Xasm" type="CLionNativeAppRunConfigurationType" PROGRAM_PARAMS="file=\&quot;xasm/tests/test.xasm\&quot; log_level=full output=\&quot;./test.xmvef\&quot; " REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" WORKING_DIR="file://$PROJECT_DIR$/railgun" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Xlang" TARGET_NAME="Xlang" CONFIG_NAME="Xlang" version="1" RUN_PATH="$PROJECT_DIR$/railgun/build/xasm">
+    <method v="2">
+      <option name="CLION.COMPOUND.BUILD" enabled="true" />
+    </method>
+  </configuration>
+</component>
