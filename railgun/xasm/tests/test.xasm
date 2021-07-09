@@ -1,29 +1,7 @@
-import "include.xasm":xasm;
+import "xasm/tests/include.xasm":xasm;
 
 _set_db_size(1024)
 _db(0,"Hello,World!")
-
-
-set_marco(jmp_nofx,{
-    mov(reg18,_marco_param0);
-})
-
-set_marco(hlt,{
-    mov(reg14,reg18);
-    sub(reg14,48);
-    mov(reg18,reg14);
-})
-
-set_marco(ret,{
-    mov(reg17,0); // reset sp to zero
-    mov(reg15,_marco_param0);
-    pop(reg0,8);
-    pop(reg1,8);
-    pop(reg2,8);
-    mov(reg16,*reg2);
-    mov(reg17,*reg1);
-    mov(reg18,*reg0);
-})
 
 main:{
     mov(reg0,1.2233);

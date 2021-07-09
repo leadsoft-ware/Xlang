@@ -84,15 +84,15 @@ void with_file(std::string filename){
     //xast::astree ast("root",Token());
     // ast generate
     if(flags["log_level"] == "full" || flags["log_level"] == "normal") sendLog(flags["log_level"],"start parse ast");
-    while(!(lexer.getNextToken().tok_val == tok_eof)){
+    while(lexer.getNextToken().tok_val != tok_eof){
         xast::astree ast = xast::rule_parser::asm_main_stmt_parser(&lexer).match();
         if(ast.matchWithRule == "") throw compiler_error("failed to parse ast",lexer.line,lexer.col);
         if(ast.matchWithRule == "import_stmt"){
             if(flags["log_level"] == "full") sendLog(flags["log_level"],"got a import statement.");
             for(int i = 0;i < ast.node.size();i++){
-                if(ast.node[i].node[1].tok.str == "xasm"){
+                if(ast.node[i].node[2].tok.str == "xasm"){
                     with_file(ast.node[i].node[0].tok.str);
-                }else if(ast.node[i].node[1].tok.str == "xlang"){
+                }else if(ast.node[i].node[2].tok.str == "xlang"){
                     sendWarning("Xasm is not support include xlang yet.",0,0);
                 }
             }
@@ -169,6 +169,6 @@ int main(int argc,const char** argv){
     /*}catch(compiler_error e){
         cout << e.what();
     };*/
-    string s;
+    //string s;
     
 }

@@ -8,7 +8,7 @@ void dump(char* filename){
     std::cout << "disasm result:\n";
     for(int i = 0;i < xmvef.head.bytecode_length;i++){
         if(xmvef.bytecode_array[i].op == xasm::bytecode::_command){ std::cout << xasm::cmdset[xmvef.bytecode_array[i].c.intval()] << "(";continue;}
-        else if(xmvef.bytecode_array[i].op == xasm::bytecode::_number) std::cout << xmvef.bytecode_array[i].c.intval();
+        else if(xmvef.bytecode_array[i].op == xasm::bytecode::_number) std::cout << "num(" << xmvef.bytecode_array[i].c.intval() << " or " << xmvef.bytecode_array[i].c.dblval() << ")";
         else if(xmvef.bytecode_array[i].op == xasm::bytecode::_address) std::cout << "*" << xmvef.bytecode_array[i].c.intval();
         else if(xmvef.bytecode_array[i].op == xasm::bytecode::_register) std::cout << "reg" << xmvef.bytecode_array[i].c.intval();
         else if(xmvef.bytecode_array[i].op == xasm::bytecode::_addr_register) std::cout << "*reg" << xmvef.bytecode_array[i].c.intval();
