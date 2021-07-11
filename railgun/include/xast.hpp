@@ -24,6 +24,7 @@ namespace xast{
 
     // user customize , 如果没有匹配的token，请将pos,line,col三个变量拨回原始的地方
     namespace rule_parser{
+        std::vector<std::string> registered_typename;
         class memberexpr_parser{
             Lexer *lexer;
             public:
@@ -40,6 +41,12 @@ namespace xast{
             Lexer *lexer;
             public:
             arraysubscript_parser(Lexer *lexer);
+            astree match(); // 不匹配返回空树
+        };
+        class typename_parser{
+            Lexer *lexer;
+            public:
+            typename_parser(Lexer *lexer);
             astree match(); // 不匹配返回空树
         };
         class primary_parser{

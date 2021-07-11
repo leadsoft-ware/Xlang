@@ -60,6 +60,8 @@ xast::rule_parser::indexof_parser::indexof_parser(Lexer *lexer){this->lexer = le
 
 xast::rule_parser::arraysubscript_parser::arraysubscript_parser(Lexer *lexer){this->lexer = lexer;}
 
+xast::rule_parser::typename_parser::typename_parser(Lexer *lexer){this->lexer = lexer;}
+
 xast::rule_parser::primary_parser::primary_parser(Lexer *lexer){this->lexer = lexer;}
 
 xast::rule_parser::term_parser::term_parser(Lexer *lexer){this->lexer = lexer;}
@@ -235,6 +237,17 @@ xast::astree xast::rule_parser::indexof_parser::match(){
     return left;
 }
 
+xast::astree xast::rule_parser::typename_parser::match(){
+    backup_for_rollback;
+    if(lexer->last.tok_val != tok_id){failed_to_match;}
+    xast::astree ast = xast::astree("typename",lexer->last);
+    lexer->getNextToken();
+    while(lexer->last.tok_val == tok_mul){
+        ast = xast::astree("typename",{xast::astree("ptr_lbl",lexer->last),ast});
+    }
+    return ast;
+}
+
 xast::astree xast::rule_parser::primary_parser::match(){
     backup_for_rollback;
     if(lexer->last.tok_val == tok_int || lexer->last.tok_val == tok_charter || lexer->last.tok_val == tok_string){xast::astree ast=xast::astree("primary",lexer->last);lexer->getNextToken();return ast;}
@@ -258,8 +271,10 @@ xast::astree xast::rule_parser::primary_parser::match(){
         return block_result;
     }else if(lexer->last.tok_val == tok_id){
         xast::astree fc_stmt_result = xast::rule_parser::function_call_statement_parser(lexer).match();
-        if(fc_stmt_result.matchWithRule == ""){Token ret = lexer->last;lexer->getNextToken();return xast::astree("primary",ret);} // 没获取到按正常id处理
-        else return xast::astree("primary",{fc_stmt_result});
+        if(fc_stmt_result.matchWithRule != ""){ return xast::astree("primary",{fc_stmt_result}); }
+        else if( ( fc_stmt_result = xast::rule_parser::function_def_stmt_parser(lexer).match() ).matchWithRule != "" ){return xast::astree("primary",{fc_stmt_result});}
+        else {Token ret = lexer->last;lexer->getNextToken();return xast::astree("primary",ret);} // 没获取到按正常id处理
+
     }
     failed_to_match;
 }
@@ -281,26 +296,40 @@ xast::astree xast::rule_parser::argument_parser::match(){
 
 xast::astree xast::rule_parser::function_def_stmt_parser::match(){
     backup_for_rollback;
-    if(lexer->last.tok_val != tok_id && lexer->last.str != "function"){failed_to_match;}
+    if(lexer->last.tok_val != tok_id || lexer->last.str != "function"){failed_to_match;}
     lexer->getNextToken();
-    xast::astree ast("function_def_stmt",{astree("primary",lexer->last)});
+    
+    // "function" argument typename "(" argument ")" block
+    //            ~~~~~~~~
+    xast::astree function_labels = xast::rule_parser::argument_parser(lexer).match();
+    //lexer->getNextToken(); argument 会向后读一个token
 
+    // "function" argument typename "(" argument ")" block
+    //                     ~~~~~~~~
+    xast::astree type = xast::rule_parser::typename_parser(lexer).match();
+    if(type.matchWithRule == ""){ throw compiler_error("bad function define statement syntax.",lexer->line,lexer->col); }
+    if(lexer->last.tok_val != tok_sbracketl){ throw compiler_error("bad function define statement syntax.",lexer->line,lexer->col); }
     lexer->getNextToken();
-    if(lexer->last.tok_val != tok_sbracketl){failed_to_match;}
-    lexer->getNextToken();
-    xast::astree args = xast::rule_parser::argument_parser(lexer).match();
-    if(lexer->last.tok_val != tok_sbracketr){throw compiler_error("expected an ')'",lexer->line,lexer->col);failed_to_match;}
-    lexer->getNextToken(); // 跳过右括号
 
+    // "function" argument typename "(" argument ")" block
+    //                              ~~~~~~~~~~~~~~~~
+    xast::astree function_arguments = xast::rule_parser::argument_parser(lexer).match();
+    if(lexer->last.tok_val != tok_sbracketr){ throw compiler_error("bad function define statement syntax.",lexer->line,lexer->col); }
+
+    // "function" argument typename "(" argument ")" block
+    //                                               ~~~~~
+    lexer->getNextToken();// code block
     if(lexer->last.tok_val != tok_mbracketl){throw compiler_error("bad function define statement syntax.",lexer->line,lexer->col);} // 与上注释相同
     lexer->getNextToken();
     xast::astree block = xast::rule_parser::block_parser(lexer).match();
     if(lexer->last.tok_val != tok_mbracketr){throw compiler_error("bad function define statement syntax.",lexer->line,lexer->col);} // 与上注释相同
     lexer->getNextToken();
-    
-    ast.node.push_back(args);
-    ast.node.push_back(block);
+    if(block.matchWithRule == ""){ throw compiler_error("bad function define statement syntax.",lexer->line,lexer->col); }
+
+    // 组装
+    xast::astree ast = xast::astree("function_def_stmt",{function_labels,type,function_arguments,block});
     return ast;
+
 }
 
 xast::astree xast::rule_parser::function_call_statement_parser::match(){
@@ -452,6 +481,7 @@ xast::astree xast::rule_parser::normal_stmt_parser::match(){
 // 因为blockstatement的解析，所以statement并不需要semicolon的解析
 xast::astree xast::rule_parser::statement_parser::match(){
     xast::astree current;
+    if(lexer->last.tok_val == tok_semicolon) return current; // empty statement
     current = xast::rule_parser::import_stmt_parser(lexer).match();
     if(current.matchWithRule != "") return current;
     current = xast::rule_parser::if_stmt_parser(lexer).match();
@@ -461,8 +491,6 @@ xast::astree xast::rule_parser::statement_parser::match(){
     current = xast::rule_parser::for_stmt_parser(lexer).match();
     if(current.matchWithRule != "") return current;
     current = xast::rule_parser::function_call_statement_parser(lexer).match();
-    if(current.matchWithRule != "") return current;
-    current = xast::rule_parser::function_def_stmt_parser(lexer).match();
     if(current.matchWithRule != "") return current;
     current = xast::rule_parser::normal_stmt_parser(lexer).match();
     if(current.matchWithRule != "") return current;

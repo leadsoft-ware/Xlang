@@ -3,6 +3,9 @@
 #include <iostream>
 #include "error.cpp"
 #include "config.hpp"
+#include <stdlib.h>
+#include <ctype.h>
+
 
 enum TOK_VALUE{
     tok_id,tok_charter,tok_string,tok_int, /*id,'any',"any",num[.num]*/

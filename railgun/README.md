@@ -14,9 +14,12 @@ relexpr ::= addexpr { ("<" | ">" | "<=" | ">=") addexpr }
 eqexpr ::= relexpr { ("=="|"!=") relexpr }
 andexpr ::= eqexpr { "&&" eqexpr }
 orexpr ::= andexpr { "||" andexpr }
-rightexpr ::= indexof "=" orexpr
+rightexpr ::= indexof ( "=" | "+=" | "-=" | "*=" | "/=" | "%=" | ":" ) orexpr
             | orexpr
 block ::= { statement ";" }
+argument ::= rightexpr { "," rightexpr }
+function_call_stmt ::= primary "(" argument ")"
+function_def_stmt ::= "function" argument ""
 if_stmt ::= "if" "(" rightexpr ")" "{" block "}" { "else" ( block | statement ) }
 while_stmt ::= "while" "(" rightexpr ")" "{" block "}"
 for_stmt ::= "for" "(" rightexpr ";" rightexpr ";" rightexpr ")" "{" block "}"
@@ -88,3 +91,43 @@ normal_stmt_break ::= "break"
 }
 ```
 
+
+
+XlangIR中间码表现形式
+```c++
+import "@packages/vmlib/libxlang.xasm":xasm;
+import "@packages/stdlib/stdlib.xlang":xlang;
+
+// 不使用相同字节码函数的引用
+vmbyte* main = function(norefernce) int (argc:int,argv:char**){
+    int i = 0;
+    int j = 1;
+    i = i + j + 1;
+    i *= i;
+    return i;
+};
+
+```
+```c++
+load("@packages/vmlib/libxlang.xlang"); // 伪语句
+load("@packages/stdlib/stdlib.xlang");
+struct( s , a:int , b:int );
+f"main"{
+    var i,8;
+    var j,8;
+    i = 0;
+    j = 1;
+    i = i + j;
+    i = i + 1;
+    i = i * i;
+    ret i;
+}
+
+entry{
+    var main,8;
+    main = f"main";
+    var ex9123jsado,8;
+    exec main,argc,argv,ex9123jsado;
+}
+
+```
