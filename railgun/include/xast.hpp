@@ -139,11 +139,17 @@ namespace xast{
             for_stmt_parser(Lexer *lexer);
             astree match(); // 不匹配返回空树
         };
-        // 变量定义，返回，等语句
+        // 返回，跳出循环，等语句
         class normal_stmt_parser{
             Lexer *lexer;
             public:
             normal_stmt_parser(Lexer *lexer);
+            astree match(); // 不匹配返回空树
+        };
+        class var_stmt_parser{
+            Lexer *lexer;
+            public:
+            var_stmt_parser(Lexer *lexer);
             astree match(); // 不匹配返回空树
         };
         class import_stmt_parser{

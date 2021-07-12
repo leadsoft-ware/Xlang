@@ -96,6 +96,8 @@ xast::rule_parser::while_stmt_parser::while_stmt_parser(Lexer *lexer){this->lexe
 
 xast::rule_parser::normal_stmt_parser::normal_stmt_parser(Lexer *lexer){this->lexer = lexer;}
 
+xast::rule_parser::var_stmt_parser::var_stmt_parser(Lexer *lexer){this->lexer = lexer;}
+
 xast::rule_parser::statement_parser::statement_parser(Lexer *lexer){this->lexer = lexer;}
 
 // 右结合表达式
@@ -244,6 +246,7 @@ xast::astree xast::rule_parser::typename_parser::match(){
     lexer->getNextToken();
     while(lexer->last.tok_val == tok_mul){
         ast = xast::astree("typename",{xast::astree("ptr_lbl",lexer->last),ast});
+        lexer->getNextToken();
     }
     return ast;
 }
@@ -307,24 +310,24 @@ xast::astree xast::rule_parser::function_def_stmt_parser::match(){
     // "function" argument typename "(" argument ")" block
     //                     ~~~~~~~~
     xast::astree type = xast::rule_parser::typename_parser(lexer).match();
-    if(type.matchWithRule == ""){ throw compiler_error("bad function define statement syntax.",lexer->line,lexer->col); }
-    if(lexer->last.tok_val != tok_sbracketl){ throw compiler_error("bad function define statement syntax.",lexer->line,lexer->col); }
+    if(type.matchWithRule == ""){ throw compiler_error("bad function declaration statement syntax.",lexer->line,lexer->col); }
+    if(lexer->last.tok_val != tok_sbracketl){ throw compiler_error("bad function declaration statement syntax.",lexer->line,lexer->col); }
     lexer->getNextToken();
 
     // "function" argument typename "(" argument ")" block
     //                              ~~~~~~~~~~~~~~~~
     xast::astree function_arguments = xast::rule_parser::argument_parser(lexer).match();
-    if(lexer->last.tok_val != tok_sbracketr){ throw compiler_error("bad function define statement syntax.",lexer->line,lexer->col); }
+    if(lexer->last.tok_val != tok_sbracketr){ throw compiler_error("bad function declaration statement syntax.",lexer->line,lexer->col); }
 
     // "function" argument typename "(" argument ")" block
     //                                               ~~~~~
     lexer->getNextToken();// code block
-    if(lexer->last.tok_val != tok_mbracketl){throw compiler_error("bad function define statement syntax.",lexer->line,lexer->col);} // 与上注释相同
+    if(lexer->last.tok_val != tok_mbracketl){throw compiler_error("bad function declaration statement syntax.",lexer->line,lexer->col);} // 与上注释相同
     lexer->getNextToken();
     xast::astree block = xast::rule_parser::block_parser(lexer).match();
-    if(lexer->last.tok_val != tok_mbracketr){throw compiler_error("bad function define statement syntax.",lexer->line,lexer->col);} // 与上注释相同
+    if(lexer->last.tok_val != tok_mbracketr){throw compiler_error("bad function declaration statement syntax.",lexer->line,lexer->col);} // 与上注释相同
     lexer->getNextToken();
-    if(block.matchWithRule == ""){ throw compiler_error("bad function define statement syntax.",lexer->line,lexer->col); }
+    if(block.matchWithRule == ""){ throw compiler_error("bad function declaration statement syntax.",lexer->line,lexer->col); }
 
     // 组装
     xast::astree ast = xast::astree("function_def_stmt",{function_labels,type,function_arguments,block});
@@ -454,7 +457,7 @@ xast::astree xast::rule_parser::for_stmt_parser::match(){
     return astree("for_stmt",{expr,block});
 }
 
-// 一切带关键词语句的匹配
+// TODO:一切带关键词语句的匹配
 xast::astree xast::rule_parser::normal_stmt_parser::match(){
     backup_for_rollback;
     xast::astree ast("normal_stmt_" + lexer->last.str,Token());
@@ -463,19 +466,21 @@ xast::astree xast::rule_parser::normal_stmt_parser::match(){
         lexer->getNextToken();
         ast.node.push_back(xast::rule_parser::rightexpr_parser(lexer).match());
         if(ast.node[0].matchWithRule == "") throw compiler_error("bad return statement syntax",lexer->line,lexer->col);
-    }else if(lexer->last.str == "var"){
-        lexer->getNextToken();
-        xast::astree temp = xast::rule_parser::rightexpr_parser(lexer).match();
-        while(temp.matchWithRule != ""){
-            ast.node.push_back(temp);
-            if(lexer->last.tok_val != tok_comma){break;} // 走到头了，除非是syntax error
-            lexer->getNextToken();
-            temp = xast::rule_parser::rightexpr_parser(lexer).match();
-        }
-        if(lexer->last.tok_val != tok_semicolon) throw compiler_error("bad var statement syntax",lexer->line,lexer->col);
     }
     // don't need getnexttoken because rightexpr already processed , here is a semicolon
     return ast;
+}
+
+// TODO: var declaration process
+// 指针与cpp不同，注意使用
+xast::astree xast::rule_parser::var_stmt_parser::match(){
+    backup_for_rollback;
+    xast::astree type,args;
+    type = xast::rule_parser::typename_parser(lexer).match();
+    if(type.matchWithRule == ""){failed_to_match;}
+    args = xast::rule_parser::argument_parser(lexer).match();
+    if(args.matchWithRule == ""){ throw compiler_error("bad var declaration.",lexer->line,lexer->col); }
+    return xast::astree("var_stmt",{type,args});
 }
 
 // 因为blockstatement的解析，所以statement并不需要semicolon的解析
@@ -493,6 +498,8 @@ xast::astree xast::rule_parser::statement_parser::match(){
     current = xast::rule_parser::function_call_statement_parser(lexer).match();
     if(current.matchWithRule != "") return current;
     current = xast::rule_parser::normal_stmt_parser(lexer).match();
+    if(current.matchWithRule != "") return current;
+    current = xast::rule_parser::var_stmt_parser(lexer).match();
     if(current.matchWithRule != "") return current;
     current = xast::rule_parser::rightexpr_parser(lexer).match();
     if(current.matchWithRule == "expression") sendWarning("An expression that has no effect on the program is calculated.",lexer->line,lexer->col);
