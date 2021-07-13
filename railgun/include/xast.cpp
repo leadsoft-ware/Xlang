@@ -488,6 +488,11 @@ xast::astree xast::rule_parser::var_stmt_parser::match(){
 xast::astree xast::rule_parser::statement_parser::match(){
     xast::astree current;
     if(lexer->last.tok_val == tok_semicolon) return current; // empty statement
+    current = xast::rule_parser::var_stmt_parser(lexer).match();
+    if(current.matchWithRule != "") return current; // god said, the priority level of var stmt must higher than expression
+    current = xast::rule_parser::rightexpr_parser(lexer).match();
+    if(current.matchWithRule == "expression") sendWarning("An expression that has no effect on the program is calculated.",lexer->line,lexer->col);
+    if(current.matchWithRule != "") return current;
     current = xast::rule_parser::import_stmt_parser(lexer).match();
     if(current.matchWithRule != "") return current;
     current = xast::rule_parser::if_stmt_parser(lexer).match();
@@ -499,11 +504,6 @@ xast::astree xast::rule_parser::statement_parser::match(){
     current = xast::rule_parser::function_call_statement_parser(lexer).match();
     if(current.matchWithRule != "") return current;
     current = xast::rule_parser::normal_stmt_parser(lexer).match();
-    if(current.matchWithRule != "") return current;
-    current = xast::rule_parser::var_stmt_parser(lexer).match();
-    if(current.matchWithRule != "") return current;
-    current = xast::rule_parser::rightexpr_parser(lexer).match();
-    if(current.matchWithRule == "expression") sendWarning("An expression that has no effect on the program is calculated.",lexer->line,lexer->col);
     if(current.matchWithRule != "") return current;
     return current; // an empty value
 }

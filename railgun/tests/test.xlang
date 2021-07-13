@@ -5,31 +5,6 @@ set db_size=1048576
 
 // 通过getBytecodeLocation取得函数地址,然后返回给fib，然后再计算右值的函数块
 
-/*
-f"fib"{
-    var a113123,1;
-    a113123 = x <= 2;
-    jf x,2;
-    ret x;
-    del a113123;
-    var a786234,8;
-    var a786235,8;
-    a786235 = x - 1;
-    exec fib, a786235, a786234;
-    del a786235;
-    var a786236,8;
-    var a786235,8;
-    a786235 = x - 2;
-    exec fib, a786235, a786236;
-    del a786235;
-    var a786237,8;
-    a786237 = a786234 + a786236;
-    del a786234;
-    del a786236;
-    ret a786237;
-}
-*/
-
 vmbyte* fib = function none int (x:int){
     if(x <= 2){
         return x;
