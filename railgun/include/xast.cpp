@@ -207,10 +207,11 @@ xast::astree xast::rule_parser::term_parser::match(){
 xast::astree xast::rule_parser::memberexpr_parser::match(){
     //backup_for_rollback;
     xast::astree left = xast::rule_parser::primary_parser(lexer).match();
+    Token dot = lexer->last; // for get position
     if(lexer->last.tok_val != tok_dot) return left;
     lexer->getNextToken(); // move to next token
     xast::astree right = xast::rule_parser::memberexpr_parser(lexer).match();
-    return astree("member_expression",{left,astree("operator",Token(tok_dot,".")),right});
+    return astree("member_expression",{left,astree("operator",dot),right});
 }
 
 xast::astree xast::rule_parser::arraysubscript_parser::match(){

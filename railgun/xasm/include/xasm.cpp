@@ -203,7 +203,7 @@ namespace xasm{
         }else if(stmt.matchWithRule.substr(0,4) == "asm_"){
             std::vector<std::string> args;
             for(int i = 0;i < stmt.node[0].node.size();i++){
-                if(stmt.node[0].node[i].matchWithRule != "asm_primary" && stmt.node[0].node[i].matchWithRule != "asm_primary_pointer"){throw compiler_error("[unknown position] expected an primary token.",0,0);} // 与上注释相同
+                if(stmt.node[0].node[i].matchWithRule != "asm_primary" && stmt.node[0].node[i].matchWithRule != "asm_primary_pointer"){throw compiler_error("expected an primary token.",stmt.node[0].node[i].tok.line,stmt.node[0].node[i].tok.col);} // 与上注释相同
                 if(stmt.node[0].node[i].matchWithRule == "asm_primary") args.push_back(stmt.node[0].node[i].tok.str);
                 else args.push_back("_addr_" + stmt.node[0].node[i].tok.str);
             }
@@ -229,7 +229,7 @@ namespace xasm{
             }
             return ret;
         }else{
-            throw compiler_error("[unknown position] unknown asm match rule.",0,0);
+            throw compiler_error("unknown asm match rule.",stmt.tok.line,stmt.tok.col);
         }
     }
 
