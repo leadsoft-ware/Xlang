@@ -114,8 +114,10 @@ xast::astree xast::rule_parser::rightexpr_parser::match(){
         return xast::rule_parser::orexpr_parser(lexer).match();
     }
     Token op = lexer->last;
+    xast::astree right;
     lexer->getNextToken();
-    xast::astree right = xast::rule_parser::orexpr_parser(lexer).match();
+    if(op.tok_val == tok_colon){ right = xast::rule_parser::typename_parser(lexer).match(); }
+    right = xast::rule_parser::orexpr_parser(lexer).match();
     return xast::astree("rightexpr",{left,astree("operator",op),right});
 }
 

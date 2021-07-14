@@ -17,7 +17,10 @@ XtimeVM: xtimevm/tests/xtime_test.cpp xtimevm/include/*
 refresh: refresh_version
 	./refresh_version fast
 
-install: clean Xasm Xlang Xmvefdump XtimeVM
+devices: 
+	make -f Devices.Makefile install
+
+install: clean Xasm Xlang Xmvefdump XtimeVM devices
 	mv xasm/tests/xasm build/
 	mv tests/xlang build/
 	mv xmvefdump/objdump build/
@@ -26,4 +29,5 @@ install: clean Xasm Xlang Xmvefdump XtimeVM
 quick: refresh install
 
 clean: 
+	make -f Devices.Makefile clean
 	rm -rf ./build/xasm* ./build/xlang* ./build/objdump* ./build/xtime* ./refresh_version

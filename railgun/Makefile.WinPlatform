@@ -25,4 +25,5 @@ install: clean __xasm __xlang __xmvefdump __xtimevm
 quick: refresh install
 
 clean: 
+	make -f Devices.Makefile clean
 	rm -rf ./build/xasm* ./build/xlang* ./build/objdump* ./build/xtime* ./refresh_version.exe
