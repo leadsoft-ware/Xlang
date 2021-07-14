@@ -12,7 +12,7 @@
 namespace xast{
     class astree{
         public:
-        enum tree_type{leaf,child} t;
+        enum tree_type{_node,_child} t;
         std::string matchWithRule;
         Token tok;
         std::vector<astree> node;
@@ -29,6 +29,18 @@ namespace xast{
             Lexer *lexer;
             public:
             memberexpr_parser(Lexer *lexer);
+            astree match(); // 不匹配返回空树
+        };
+        class struct_decl_parser{
+            Lexer *lexer;
+            public:
+            struct_decl_parser(Lexer *lexer);
+            astree match(); // 不匹配返回空树
+        };
+        class class_decl_parser{
+            Lexer *lexer;
+            public:
+            class_decl_parser(Lexer *lexer);
             astree match(); // 不匹配返回空树
         };
         class indexof_parser{

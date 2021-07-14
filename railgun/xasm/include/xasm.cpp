@@ -35,7 +35,7 @@ namespace xast::rule_parser{
         asm_argument_parser(Lexer *lexer){this->lexer = lexer;}
         xast::astree match(){
             xast::astree ast;
-            ast.t = xast::astree::leaf;
+            ast.t = xast::astree::_node;
             ast.matchWithRule = "argument";
             if(lexer->last.tok_val == tok_sbracketr || lexer->last.tok_val == tok_semicolon){return ast;} // 没有参数，返回，小括号右端要匹配，不用跳过
             ast.node.push_back(xast::rule_parser::asm_primary_parser(lexer).match());
@@ -56,14 +56,14 @@ namespace xast::rule_parser{
             backup_for_rollback;
             if(lexer->last.str != "_db"){failed_to_match;}
             lexer->getNextToken();
-            if(lexer->last.tok_val != tok_sbracketl){throw compiler_error("expected a '(' befoce arguments.",lexer->line,lexer->col);} // 与上注释相同
+            if(lexer->last.tok_val != tok_sbracketl){throw compiler_error("expected a '(' befoce arguments.",lexer->last.line,lexer->last.col);} // 与上注释相同
             lexer->getNextToken();
-            if(lexer->last.tok_val != tok_int){throw compiler_error("expected a data address",lexer->line,lexer->col);} // 与上注释相同
+            if(lexer->last.tok_val != tok_int){throw compiler_error("expected a data address",lexer->last.line,lexer->last.col);} // 与上注释相同
             xast::astree root("asm_db_stmt",{xast::astree("primary",lexer->last)});
             lexer->getNextToken();
-            if(lexer->last.tok_val != tok_comma){throw compiler_error("expected a comma befoce asm block",lexer->line,lexer->col);} // 与上注释相同
+            if(lexer->last.tok_val != tok_comma){throw compiler_error("expected a comma befoce asm block",lexer->last.line,lexer->last.col);} // 与上注释相同
             lexer->getNextToken();
-            if(lexer->last.tok_val != tok_string && lexer->last.tok_val != tok_int){throw compiler_error("expected a primary token",lexer->line,lexer->col);} // 与上注释相同
+            if(lexer->last.tok_val != tok_string && lexer->last.tok_val != tok_int){throw compiler_error("expected a primary token",lexer->last.line,lexer->last.col);} // 与上注释相同
             root.node.push_back({xast::astree("primary",lexer->last)});
             lexer->getNextToken();
             return root;
@@ -83,13 +83,13 @@ namespace xast::rule_parser{
             else root = xast::astree("marco_"+lexer->last.str,Token());
 
             lexer->getNextToken();
-            if(lexer->last.tok_val != tok_sbracketl){throw compiler_error("expected an '(' befoce arguments",lexer->line,lexer->col);}
+            if(lexer->last.tok_val != tok_sbracketl){throw compiler_error("expected an '(' befoce arguments",lexer->last.line,lexer->last.col);}
             lexer->getNextToken();
             xast::astree args = xast::rule_parser::asm_argument_parser(lexer).match();
-            if(lexer->last.tok_val != tok_sbracketr){throw compiler_error("expected an ')' after arguments",lexer->line,lexer->col);}
+            if(lexer->last.tok_val != tok_sbracketr){throw compiler_error("expected an ')' after arguments",lexer->last.line,lexer->last.col);}
             lexer->getNextToken();
 
-            if(args.matchWithRule == ""){root.t = xast::astree::child;return root;}
+            if(args.matchWithRule == ""){root.t = xast::astree::_child;return root;}
             root.node.push_back(args);
             return root;
         }
@@ -99,19 +99,19 @@ namespace xast::rule_parser{
         public:
         asm_block_parser(Lexer* lexer){this->lexer = lexer;}
         xast::astree match(){
-            if(lexer->last.tok_val != tok_mbracketl){throw compiler_error("expected a '{' befoce block.",lexer->line,lexer->col);} // 与上注释相同
+            if(lexer->last.tok_val != tok_mbracketl){throw compiler_error("expected a '{' befoce block.",lexer->last.line,lexer->last.col);} // 与上注释相同
             lexer->getNextToken();
             xast::astree root("_asm_block",Token());
             xast::astree temp = xast::rule_parser::asm_stmt_parser(lexer).match();
             if(temp.matchWithRule == ""){lexer->getNextToken();return root;}
             while(temp.matchWithRule != ""){
                 root.node.push_back(temp);
-                if(lexer->last.tok_val != tok_semicolon){throw compiler_error("expected a semicolon before next statement.",lexer->line,lexer->col);} // 与上注释相同
+                if(lexer->last.tok_val != tok_semicolon){throw compiler_error("expected a semicolon before next statement.",lexer->last.line,lexer->last.col);} // 与上注释相同
                 lexer->getNextToken();
                 temp = xast::rule_parser::asm_stmt_parser(lexer).match();
             }
             //lexer->getNextToken();
-            if(lexer->last.tok_val != tok_mbracketr){throw compiler_error("expected a '}' after block.",lexer->line,lexer->col);} // 与上注释相同
+            if(lexer->last.tok_val != tok_mbracketr){throw compiler_error("expected a '}' after block.",lexer->last.line,lexer->last.col);} // 与上注释相同
             //lexer->getNextToken();
             return root;
         }
@@ -123,7 +123,7 @@ namespace xast::rule_parser{
         xast::astree match(){
             xast::astree primary = xast::rule_parser::primary_parser(lexer).match();
             xast::astree root("asmblock",{primary});
-            if(primary.matchWithRule == "" || lexer->last.tok_val != tok_colon){throw compiler_error("asm block must have a name.",lexer->line,lexer->col);} // 与上注释相同
+            if(primary.matchWithRule == "" || lexer->last.tok_val != tok_colon){throw compiler_error("asm block must have a name.",lexer->last.line,lexer->last.col);} // 与上注释相同
             lexer->getNextToken();
             xast::astree block = xast::rule_parser::asm_block_parser(lexer).match();
             root.node.push_back(block);
@@ -138,12 +138,12 @@ namespace xast::rule_parser{
             backup_for_rollback;
             if(lexer->last.str != "set_marco"){failed_to_match;}
             lexer->getNextToken();
-            if(lexer->last.tok_val != tok_sbracketl){throw compiler_error("expected a '(' befoce arguments.",lexer->line,lexer->col);} // 与上注释相同
+            if(lexer->last.tok_val != tok_sbracketl){throw compiler_error("expected a '(' befoce arguments.",lexer->last.line,lexer->last.col);} // 与上注释相同
             lexer->getNextToken();
-            if(lexer->last.tok_val != tok_id){throw compiler_error("expected a marco name",lexer->line,lexer->col);} // 与上注释相同
+            if(lexer->last.tok_val != tok_id){throw compiler_error("expected a marco name",lexer->last.line,lexer->last.col);} // 与上注释相同
             xast::astree root("asm_marco_stmt",{xast::astree("primary",lexer->last)});
             lexer->getNextToken();
-            if(lexer->last.tok_val != tok_comma){throw compiler_error("expected a comma befoce asm block",lexer->line,lexer->col);} // 与上注释相同
+            if(lexer->last.tok_val != tok_comma){throw compiler_error("expected a comma befoce asm block",lexer->last.line,lexer->last.col);} // 与上注释相同
             lexer->getNextToken();
             xast::astree block = xast::rule_parser::asm_block_parser(lexer).match();
             lexer->getNextToken();
@@ -160,9 +160,9 @@ namespace xast::rule_parser{
             backup_for_rollback;
             if(lexer->last.str != "_set_db_size"){failed_to_match;}
             lexer->getNextToken();
-            if(lexer->last.tok_val != tok_sbracketl){throw compiler_error("expected a '(' befoce arguments.",lexer->line,lexer->col);} // 与上注释相同
+            if(lexer->last.tok_val != tok_sbracketl){throw compiler_error("expected a '(' befoce arguments.",lexer->last.line,lexer->last.col);} // 与上注释相同
             lexer->getNextToken();
-            if(lexer->last.tok_val != tok_int){throw compiler_error("expected a database size",lexer->line,lexer->col);} // 与上注释相同
+            if(lexer->last.tok_val != tok_int){throw compiler_error("expected a database size",lexer->last.line,lexer->last.col);} // 与上注释相同
             xast::astree root("asm_db_size_stmt",{xast::astree("primary",lexer->last)});
             lexer->getNextToken();
             return root;

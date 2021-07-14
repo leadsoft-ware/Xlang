@@ -34,52 +34,52 @@ normal_stmt_break ::= "break"
 
 ```json
 {
- type: "leaf",
+ type: "node",
  match: "block",
  node: [
   {
-   type: "leaf",
+   type: "node",
    match: "if_stmt",
    node: [
     {
-     type: "leaf",
+     type: "node",
      match: "expression",
      node: [
       {
-       type: "leaf",
+       type: "node",
        match: "expression",
        node: [
         {
-         type: "child",
+         type: "_child",
          match: "primary",
          token: "tok_int:1"
 
         },        {
-         type: "child",
+         type: "_child",
          match: "operator",
          token: "tok_add:+"
 
         },        {
-         type: "child",
+         type: "_child",
          match: "primary",
          token: "tok_int:1"
 
         },
        ]
       },      {
-       type: "child",
+       type: "_child",
        match: "operator",
        token: "tok_equal:=="
 
       },      {
-       type: "child",
+       type: "_child",
        match: "primary",
        token: "tok_int:2"
 
       },
      ]
     },    {
-     type: "leaf",
+     type: "node",
      match: "block",
      node: [
 
