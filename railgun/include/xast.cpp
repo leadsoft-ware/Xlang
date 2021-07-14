@@ -54,6 +54,17 @@ std::string xast::astree::toString(int deepth){
     return ss.str();
 }
 
+bool xast::rule_parser::isInBuiltInFunctionList(std::string s){
+    if( s == "value" ) return true;
+    else if( s == "ptr" ) return true;
+    else if( s == "and" ) return true;
+    else if( s == "or" ) return true;
+    else if( s == "not" ) return true;
+    else if( s == "lm" ) return true;
+    else if( s == "rm" ) return true;
+    else return false;
+}
+
 xast::rule_parser::memberexpr_parser::memberexpr_parser(Lexer *lexer){this->lexer = lexer;}
 
 xast::rule_parser::indexof_parser::indexof_parser(Lexer *lexer){this->lexer = lexer;}
@@ -363,7 +374,7 @@ xast::astree xast::rule_parser::function_call_statement_parser::match(){
     xast::astree args = xast::rule_parser::argument_parser(lexer).match();
     if(lexer->last.tok_val != tok_sbracketr){throw compiler_error("expected an ')'",lexer->last.line,lexer->last.col);failed_to_match;}
     lexer->getNextToken(); // 跳过右括号
-    return astree("function_call_statement",{astree("id",funcname),args});
+    return !isInBuiltInFunctionList(funcname.str) ? astree("function_call_statement",{astree("id",funcname),args}) : astree("builtInFunctionCallStmt",{astree("id",funcname),args});    
 }
 
 xast::astree xast::rule_parser::block_parser::match(){

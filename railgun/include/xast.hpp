@@ -24,7 +24,7 @@ namespace xast{
 
     // user customize , 如果没有匹配的token，请将pos,line,col三个变量拨回原始的地方
     namespace rule_parser{
-        std::vector<std::string> registered_typename;
+        bool isInBuiltInFunctionList(std::string s);
         class memberexpr_parser{
             Lexer *lexer;
             public:

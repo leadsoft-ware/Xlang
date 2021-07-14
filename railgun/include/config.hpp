@@ -1,3 +1,3 @@
 #define __xlang_insider
-#define __xlang_version "1.2b320"
-#define __xlang_build 1626248478
+#define __xlang_version "1.2b322"
+#define __xlang_build 1626278855
