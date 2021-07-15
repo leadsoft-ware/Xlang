@@ -1,4 +1,5 @@
 #include "../include/xtime.hpp"
+#include "../../include/systemapis.cpp"
 
 #define export extern "C"
 
@@ -13,17 +14,17 @@ export void input(char* source){
     {
     // standard input (read one byte)
     case 0:
-        read(0,source,1);
+        source[0] = getch();
         break;
 
     // read 8 byte
     case 1:
-        read(0,source,8);
+        for(int i = 0;i < 8;i++) source[i] = getch();
         break;
 
     // read 16 byte
     case 2:
-        read(0,source,16);
+        for(int i = 0;i < 16;i++) source[i] = getch();
         break;
     
     default:

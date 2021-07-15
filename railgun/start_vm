@@ -1,0 +1,5 @@
+#!/bin/bash
+./build/xtimevm \
+file=\"test.xmvef\" \
+memsize=1048576 \
+withDevices+=\"build/devtest\"

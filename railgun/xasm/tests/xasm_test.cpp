@@ -4,9 +4,9 @@
 #include <iomanip>
 #include <time.h>
 using namespace std;
-map<string,string> flags;
 std::vector<xasm::bytecode_block> blocks;
 
+map< string,vector<string> > flags;
 
 void parse_args(int argc,const char** argv){
     if(argc == 1) return;
@@ -15,8 +15,11 @@ void parse_args(int argc,const char** argv){
         lexer.getNextToken();
         xast::astree ast = xast::rule_parser::rightexpr_parser(&lexer).match();
         if(ast.matchWithRule == ""){throw compiler_error(string("unknown argument at ")+ argv[i],lexer.line,lexer.col);}
-        else if(ast.matchWithRule == "rightexpr") flags[ast.node[0].tok.str] = ast.node[2].tok.str;
-        else if(ast.matchWithRule == "primary") flags[ast.tok.str] = "true";
+        else if(ast.matchWithRule == "rightexpr"){
+            if(ast.node[1].tok.tok_val == tok_eq){flags[ast.node[0].tok.str].push_back(ast.node[2].tok.str);}
+            if(ast.node[1].tok.tok_val == tok_addwith) flags[ast.node[0].tok.str].push_back(ast.node[2].tok.str);
+        }
+        else if(ast.matchWithRule == "primary") {flags[ast.tok.str].push_back("true");}
         else{throw compiler_error(string("unknown argument at ")+ argv[i],lexer.line,lexer.col);}
     }
 }
@@ -43,7 +46,7 @@ void terminal(){
 }
 
 void save_xmvef(){
-    if(flags["log_level"] == "full" || flags["log_level"] == "normal") sendLog(flags["log_level"],"bytecode_block all generated");
+    if(flags["log_level"].at(0) == "full" || flags["log_level"].at(0) == "normal") sendLog(flags["log_level"].at(0),"bytecode_block all generated");
     xasm::xmvef_file xmvef;
     xmvef.head.license=xasm::vmexec_file_header::_gpl;
     xmvef.head.xmvef_sign = 0x114514ff;
@@ -62,18 +65,18 @@ void save_xmvef(){
     xmvef.head.start_of_pc = xasm::database.size() + xasm::countBytecodeBlock(blocks,0,xasm::inBlockMap("entry",blocks)) * sizeof(xasm::bytecode);
     xmvef.head.from_xlang_package_server = 0;
 
-    if(flags["output"] != "") xasm::create_xmvef_file((char*)flags["output"].data(),xmvef);
+    if(flags["output"].at(0) != "") xasm::create_xmvef_file((char*)flags["output"].data(),xmvef);
     else throw compiler_error("Cannot output to file",0,0);
 }
 
 void with_file(std::string filename){
-    if(flags["log_level"] == "full") sendLog(flags["log_level"],"trying open file");
+    if(flags["log_level"].at(0) == "full") sendLog(flags["log_level"].at(0),"trying open file");
     int fd = open(filename.c_str(),O_RDWR);
     if(fd == -1) throw compiler_error("open file failed",0,0);
     struct stat file_info;
-    if(flags["log_level"] == "full") sendLog(flags["log_level"],"trying stat file");
-    stat(flags["file"].c_str(),&file_info);
-    if(flags["log_level"] == "full") sendLog(flags["log_level"],"allocating memory for code");
+    if(flags["log_level"].at(0) == "full") sendLog(flags["log_level"].at(0),"trying stat file");
+    stat(flags["file"].at(0).c_str(),&file_info);
+    if(flags["log_level"].at(0) == "full") sendLog(flags["log_level"].at(0),"allocating memory for code");
     std::string s;
     s.resize(file_info.st_size+2);
     read(fd,(char*)s.data(),file_info.st_size);
@@ -83,12 +86,12 @@ void with_file(std::string filename){
     Lexer lexer(s);
     //xast::astree ast("root",Token());
     // ast generate
-    if(flags["log_level"] == "full" || flags["log_level"] == "normal") sendLog(flags["log_level"],"start parse ast");
+    if(flags["log_level"].at(0) == "full" || flags["log_level"].at(0) == "normal") sendLog(flags["log_level"].at(0),"start parse ast");
     while(lexer.getNextToken().tok_val != tok_eof){
         xast::astree ast = xast::rule_parser::asm_main_stmt_parser(&lexer).match();
         if(ast.matchWithRule == "") throw compiler_error("failed to parse ast",lexer.line,lexer.col);
         if(ast.matchWithRule == "import_stmt"){
-            if(flags["log_level"] == "full") sendLog(flags["log_level"],"got a import statement.");
+            if(flags["log_level"].at(0) == "full") sendLog(flags["log_level"].at(0),"got a import statement.");
             for(int i = 0;i < ast.node.size();i++){
                 if(ast.node[i].node[2].tok.str == "xasm"){
                     with_file(ast.node[i].node[0].tok.str);
@@ -99,7 +102,7 @@ void with_file(std::string filename){
             continue;
         }
         if(ast.matchWithRule == "asm_marco_stmt"){
-            if(flags["log_level"] == "full") sendLog(flags["log_level"],"got a marco statement.");
+            if(flags["log_level"].at(0) == "full") sendLog(flags["log_level"].at(0),"got a marco statement.");
             xasm::marcos[ast.node[0].tok.str] = ast.node[1];
             continue;
         }
@@ -124,13 +127,13 @@ void with_file(std::string filename){
             }
             continue;
         }
-        if(flags["log_level"] == "full" || flags["log_level"] == "normal") sendLog(flags["log_level"],"ast generated");
+        if(flags["log_level"].at(0) == "full" || flags["log_level"].at(0) == "normal") sendLog(flags["log_level"].at(0),"ast generated");
         xasm::asm_block temp_block = xasm::translateToASMStruct(ast);
         blocks.push_back(xasm::bytecode_block());
         blocks[blocks.size()-1].block_name = temp_block.block_name;
-        if(flags["log_level"] == "full" || flags["log_level"] == "normal") sendLog(flags["log_level"],"transated to asm_struct");
+        if(flags["log_level"].at(0) == "full" || flags["log_level"].at(0) == "normal") sendLog(flags["log_level"].at(0),"transated to asm_struct");
         xasm::bytecode_block b_block = xasm::translateToBytecode(temp_block,blocks);
-        if(flags["log_level"] == "full" || flags["log_level"] == "normal") sendLog(flags["log_level"],"generated bytecode block");
+        if(flags["log_level"].at(0) == "full" || flags["log_level"].at(0) == "normal") sendLog(flags["log_level"].at(0),"generated bytecode block");
         blocks[blocks.size()-1] = b_block;
     }
     close(fd);
@@ -156,13 +159,18 @@ int main(int argc,const char** argv){
     /*try{*/
         parse_args(argc,argv);
         for(auto i = flags.begin();i != flags.end();i++){
-            cout << "arg:" << i->first << ":" << i->second << " ";
+            cout << "arg:" << i->first << ": {";
+            for(int j = 0;j < i->second.size();j++){
+                if(j == i->second.size() - 1) cout << i->second[j] << "}";
+                else cout << i->second[j] << ",";
+            }
         }
-        if(flags["terminal"] == "true") terminal();
-        if(flags["log_level"] == "") flags["log_level"] = "normal";
-        else if(flags["file"] != ""){
-            std::cout << "\nlog level as " << flags["log_level"] << std::endl;
-            with_file(flags["file"]);
+        cout << "arg end" << endl;
+        if(flags["terminal"].at(0) == "true") terminal();
+        if(flags["log_level"].at(0) == "") flags["log_level"].at(0) = "normal";
+        else if(flags["file"].at(0) != ""){
+            std::cout << "\nlog level as " << flags["log_level"].at(0) << std::endl;
+            with_file(flags["file"].at(0));
             save_xmvef();
         }
         else throw compiler_error("unknown compiler mode",0,0);
